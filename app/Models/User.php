@@ -32,4 +32,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function employee(){
+        return $this->hasOne(Employee::class, 'personID', 'personID');
+    }
+    public function client(){
+        return $this->hasOne(Client::class, 'personID', 'personID');
+    }
 }

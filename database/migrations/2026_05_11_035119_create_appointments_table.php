@@ -21,6 +21,8 @@ return new class extends Migration
             $table->time('finishHour', 0);
             $table->enum('status', ['pending', 'in_process', 'cancelled', 'Finished']);
             $table->text('notes')->default('none');
+            $table->foreign('clientID')->references('userID')->on('users')->onDelete('cascade');
+            $table->foreign('employeeID')->references('employeeID')->on('employees')->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();
         });

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('subtotal', 8, 2);
             $table->text('paymentMethod');
             $table->softDeletes();
+            $table->foreign('appointmentID')->references('appointmentID')->on('appointments')->onDelete('cascade'); 
             $table->timestamps();
         });
     }
