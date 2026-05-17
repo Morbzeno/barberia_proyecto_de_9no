@@ -16,9 +16,8 @@ return new class extends Migration
             $table->id('appointmentID');
             $table->foreignId('clientID');
             $table->foreignId('employeeID');
-            $table->date('date');
-            $table->time('startHour', 0);
-            $table->time('finishHour', 0);
+            $table->date('startHour');
+            $table->date('finishHour');
             $table->enum('status', ['pending', 'in_process', 'cancelled', 'Finished']);
             $table->text('notes')->default('none');
             $table->foreign('clientID')->references('userID')->on('users')->onDelete('cascade');

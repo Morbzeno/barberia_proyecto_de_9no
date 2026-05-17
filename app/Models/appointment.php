@@ -9,13 +9,14 @@ class Appointment extends Model
 {
     use SoftDeletes;
     protected $primaryKey = 'appointmentID';
-    protected $fillable = ['clientID', 'employeeID', 'date', 'startHour', 'finishHour', 'notes', 'status'];
+    protected $fillable = ['clientID', 'employeeID', 'startHour', 'finishHour', 'notes', 'status'];
     
     public function client()
     {
         return $this->belongsTo(User::class, 'clientID', 'userID');
     }
-    public function employee(){
+    public function employee()
+    {
         return $this->belongsTo(Employee::class, 'employeeID', 'employeeID');
     }
     public function appointmentDetails()

@@ -96,7 +96,7 @@ class ServiceController extends Controller
 
             } catch (\Exception $e) {
                 return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()]);
-            }
+        }
     }
 
     public function destroy($id){
