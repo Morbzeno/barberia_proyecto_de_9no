@@ -27,4 +27,10 @@ class Appointment extends Model
     {
         return $this->hasOne(Payment::class, 'appointmentID', 'appointmentID');
     }
+
+    public function chair()
+    {
+        return $this->belongsTo(Chair::class, 'chairID', 'chairID');
+    }
 }
+

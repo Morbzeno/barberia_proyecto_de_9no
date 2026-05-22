@@ -19,8 +19,7 @@ class Client extends Model
         return $this->belongsTo(Person::class, 'personID', 'personID');
     }
 
-    public function appointments()
-    {
+    public function appointments(){
         return $this->hasMany(Appointment::class, 'clientID', 'clientID');
     }
 }

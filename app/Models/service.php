@@ -11,4 +11,14 @@ class Service extends Model
     protected $primaryKey = 'servicesID';
     protected $fillable = ['name', 'description', 'price', 'aproxDuration'];
 
+    public function chair_services()
+    {
+        return $this->hasMany(ChairService::class, 'serviceID', 'servicesID');
+    }
+
+    public function appointment_details()
+    {
+        return $this->hasMany(AppointmentDetail::class, 'serviceID', 'servicesID');
+    }
+
 }
