@@ -63,7 +63,7 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
                 return response()->json([
                     'message' => $e,
-                ], 400);
+                ], 500);
         }
     }
 
@@ -72,7 +72,7 @@ class ServiceController extends Controller
 
         if (!$service) {
             return response()->json([
-                'message' => 'Empleado no encontrado'
+                'message' => 'service no encontrado'
             ], 404);
         }
 
@@ -95,7 +95,7 @@ class ServiceController extends Controller
             });
 
             } catch (\Exception $e) {
-                return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()]);
+                return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()],500);
         }
     }
 

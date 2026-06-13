@@ -83,7 +83,7 @@ class ClientController extends Controller
         } catch (\Exception $e) {
                 return response()->json([
                     'message' => $e,
-                ], 400);
+                ], 500);
         }
     }
 
@@ -132,7 +132,7 @@ class ClientController extends Controller
         });
 
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()],500);
         }
     }
 

@@ -46,7 +46,7 @@ class AppointmentController extends Controller
         $request->validate([
             'clientID' => 'required|exists:clients,clientID',
             'employeeID' => 'required|exists:employees,employeeID',
-            'chairID' => 'required|exists:chairs,chairID', // <-- Validar que la silla exista
+            'chairID' => 'required|exists:chairs,chairID',
             'startHour' => 'required|date',
             'services' => 'required|array',
             'services.*.serviceID' => 'required|exists:services,servicesID',

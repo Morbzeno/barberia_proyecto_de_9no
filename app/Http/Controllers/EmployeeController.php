@@ -53,7 +53,7 @@ class EmployeeController extends Controller
             'phone_number' => 'required|string|max:10',
             //employee
             'payment' => 'required|decimal:2|max:10000.00',
-            'schedule' => 'required|date',
+            'schedule' => 'required|array',
             'admin_type' => 'required|in:barber,admin',
 
         ]);
@@ -91,7 +91,7 @@ class EmployeeController extends Controller
         } catch (\Exception $e) {
                 return response()->json([
                     'message' => $e,
-                ], 400);
+                ], 500);
         }
     }
 
@@ -145,7 +145,7 @@ class EmployeeController extends Controller
         });
 
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()],500);
         }
     }
 

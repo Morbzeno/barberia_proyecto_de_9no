@@ -23,4 +23,7 @@ class Employee extends Model
     {
         return $this->hasMany(Appointment::class, 'employeeID', 'employeeID');
     }
+    protected $casts = [
+        'schedule' => 'array', // 👈 ¡ESTO ES LA CLAVE!
+    ];
 }
