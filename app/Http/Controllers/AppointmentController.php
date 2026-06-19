@@ -49,22 +49,22 @@ class AppointmentController extends Controller
             'chairID' => 'required|exists:chairs,chairID',
             'startHour' => 'required|date',
             'services' => 'required|array',
-            'services.*.serviceID' => 'required|exists:services,servicesID',
+            'services.*.serviceID' => 'required|exists:services,serviceID',
             'services.*.totalPrice' => 'required|numeric'
         ]);
 
         try {
             return DB::transaction(function() use ($request) {
                 $servicesIds = collect($request->services)->pluck('serviceID')->toArray();
-                $totalDuration = Service::whereIn('servicesID', $servicesIds)->sum('aproxDuration');
-            
+                $totalDuration = (int) Service::whereIn('serviceID', $servicesIds)->sum('aproxDuration');
+
                 $newStart = Carbon::parse($request->startHour);
                 $newEnd = $newStart->copy()->addMinutes($totalDuration);
 
                 // =========================================================================
                 // VALIDACIÓN 1: ¿La silla seleccionada soporta TODOS los servicios pedidos?
                 // =========================================================================
-                $supportedServicesCount = DB::table('chair_service')
+                $supportedServicesCount = DB::table('chairs_services')
                     ->where('chairID', $request->chairID)
                     ->whereIn('serviceID', $servicesIds)
                     ->count();
@@ -79,24 +79,26 @@ class AppointmentController extends Controller
                 // =========================================================================
                 // VALIDACIÓN 2: ¿El empleado está trabajando y está libre? (Traslape Empleado)
                 // =========================================================================
-                $dayOfWeek = $newStart->dayOfWeek;
-                $isWorking = DB::table('employee_schedules')
-                    ->where('employeeID', $request->employeeID)
-                    ->where('day_of_week', $dayOfWeek)
-                    ->where('start_time', '<=', $newStart->toTimeString())
-                    ->where('end_time', '>=', $newEnd->toTimeString())
-                    ->exists();
+            
+                // $dayOfWeek = $newStart->dayOfWeek;
+                // $isWorking = DB::table('employee_schedules')
+                //     ->where('employeeID', $request->employeeID)
+                //     ->where('day_of_week', $dayOfWeek)
+                //     ->where('start_time', '<=', $newStart->toTimeString())
+                //     ->where('end_time', '>=', $newEnd->toTimeString())
+                //        ->exists();
 
-                if (!$isWorking) {
-                    throw ValidationException::withMessages([
-                        'startHour' => "El empleado no trabaja en ese horario."
-                    ]);
-                }
+                // if (!$isWorking) {
+                //     throw ValidationException::withMessages([
+                //         'startHour' => "El empleado no trabaja en ese horario."
+                //     ]);
+                // }
 
                 $employeeOverlap = Appointment::where('employeeID', $request->employeeID)
                     ->whereDate('startHour', $newStart->toDateString())
                     ->where(function($query) use ($newStart, $newEnd) {
-                        $query->where('startHour', '<', $newEnd)->where('finishHour', '>', $newStart);
+                        $query->where('startHour', '<', $newEnd->toDateTimeString())  // <-- Forzado a String de MySQL
+                            ->where('finishHour', '>', $newStart->toDateTimeString()); // <-- Forzado a String de MySQL
                     })->exists();
 
                 if ($employeeOverlap) {
@@ -108,18 +110,18 @@ class AppointmentController extends Controller
                 // =========================================================================
                 // VALIDACIÓN 3: ¿La SILLA está libre en ese rango de tiempo? (Traslape Silla)
                 // =========================================================================
-                $chairOverlap = Appointment::where('chairID', $request->chairID)
-                    ->whereDate('startHour', $newStart->toDateString())
-                    ->where(function($query) use ($newStart, $newEnd) {
-                        $query->where('startHour', '<', $newEnd)->where('finishHour', '>', $newStart);
-                    })->exists();
+                    $chairOverlap = Appointment::where('chairID', $request->chairID)
+                        ->whereDate('startHour', $newStart->toDateString())
+                        ->where(function($query) use ($newStart, $newEnd) {
+                            $query->where('startHour', '<', $newEnd->toDateTimeString())  // <-- Forzado a String de MySQL
+                                ->where('finishHour', '>', $newStart->toDateTimeString()); // <-- Forzado a String de MySQL
+                        })->exists();
 
-                if ($chairOverlap) {
-                    throw ValidationException::withMessages([
-                        'chairID' => "La silla seleccionada ya está ocupada por otra cita en este horario."
-                    ]);
-                }
-
+                    if ($chairOverlap) {
+                        throw ValidationException::withMessages([
+                            'chairID' => "La silla seleccionada ya está ocupada por otra cita en este horario."
+                        ]);
+                    }
                 // =========================================================================
                 // GUARDAR CITA
                 // =========================================================================

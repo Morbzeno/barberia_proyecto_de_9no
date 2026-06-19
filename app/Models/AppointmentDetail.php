@@ -13,7 +13,7 @@ class AppointmentDetail extends Model
 
     public function service()
     {
-        return $this->belongsTo(Service::class, 'serviceID', 'servicesID');
+        return $this->belongsTo(Service::class, 'serviceID', 'serviceID');
     }
 
     public function appointment()

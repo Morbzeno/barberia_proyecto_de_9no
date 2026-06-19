@@ -16,12 +16,12 @@ return new class extends Migration
             $table->id('appointmentID');
             $table->foreignId('clientID');
             $table->foreignId('employeeID');
-            $table->foreignd('chairID');
-            $table->date('startHour');
-            $table->date('finishHour');
+            $table->foreignId('chairID');
+            $table->dateTime('startHour');
+            $table->dateTime('finishHour');
             $table->enum('status', ['pending', 'in_process', 'cancelled', 'Finished']);
             $table->text('notes')->default('none');
-            $table->foreign('clientID')->references('userID')->on('users')->onDelete('cascade');
+            $table->foreign('clientID')->references('clientID')->on('clients')->onDelete('cascade');
             $table->foreign('employeeID')->references('employeeID')->on('employees')->onDelete('cascade');
             $table->foreign('chairID')->references('chairID')->on('chairs')->onDelete('cascade');
             $table->softDeletes();

@@ -6,9 +6,19 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ChairController;
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
+// Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/clients', [ClientController::class, 'index']);
+    Route::get('/clients/{id}', [ClientController::class, 'show']);
+    Route::post('/clients', [ClientController::class, 'store']);
+    Route::put('/clients/{id}', [ClientController::class, 'update']);
+    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -19,10 +29,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
 });
 
+Route::post('/employees', [EmployeeController::class, 'store']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/employees', [EmployeeController::class, 'index']);
     Route::get('/employees/{id}', [EmployeeController::class, 'show']);
-    Route::post('/employees', [EmployeeController::class, 'store']);
+    
     Route::put('/employees/{id}', [EmployeeController::class, 'update']);
     Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 });
@@ -35,12 +46,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']);
     Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
     Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
+// });
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/chairs', [ChairController::class, 'index']);
+    Route::get('/chairs/{id}', [ChairController::class, 'show']);
+    Route::post('/chairs', [ChairController::class, 'store']);
+    Route::put('/chairs/{id}', [ChairController::class, 'update']);
+    Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
 });
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;

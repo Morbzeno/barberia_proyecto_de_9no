@@ -49,7 +49,6 @@ class ClientController extends Controller
             // person
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'rfc' => 'required|string|unique:persons,rfc|max:13',
             'phone_number' => 'required|string|max:10',
         ]);
 
@@ -65,7 +64,6 @@ class ClientController extends Controller
                 $person = Person::create([
                     'name' => $request->name,
                     'last_name' => $request->last_name,
-                    'rfc' => $request->rfc,
                     'phone_number' => $request->phone_number
                 ]);
                 $person->save();
@@ -76,7 +74,7 @@ class ClientController extends Controller
                 ]);
 
                 return response()->json([
-                    'message' => 'Empleado creado correctamente',
+                    'message' => 'Client creado correctamente',
                     'data' => $Client
                 ], 200);
             });
@@ -93,7 +91,7 @@ class ClientController extends Controller
 
     if (!$Client) {
         return response()->json([
-            'message' => 'Empleado no encontrado'
+            'message' => 'Client no encontrado'
         ], 404);
     }
 
@@ -126,7 +124,7 @@ class ClientController extends Controller
             $Client->person->update($request->only(['name', 'last_name', 'rfc', 'phone_number']));
 
             return response()->json([
-                'message' => 'Empleado actualizado correctamente',
+                'message' => 'Client actualizado correctamente',
                 'data' => $Client->fresh(['user', 'person'])
             ], 200);
         });

@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id('personID');
             $table->string('name');
             $table->string('last_name');
-            $table->string('rfc');
             $table->string('phone_number', 10);
             $table->softDeletes(); // Adds deleted_at column
             $table->timestamps();

@@ -10,9 +10,9 @@ class Chair extends Model
     protected $primaryKey = 'chairID';
     protected $fillable = ['chairName'];
 
-    public function chair_services()
+    public function services()
     {
-        return $this->hasMany(ChairService::class, 'chairID', 'chairID');
+        return $this->belongsToMany(Service::class, 'chairs_services', 'chairID', 'serviceID', 'chairID', 'serviceID');
     }
 
     public function appointments()

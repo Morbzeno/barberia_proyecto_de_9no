@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('personID');
             $table->decimal('payment', 10, 2);
             $table->json('schedule');
+            $table->string('rfc');
             $table->enum('admin_type', ['barber', 'admin'])->default('barber');
             $table->foreign('userID')->references('userID')->on('users')->onDelete('cascade');
             $table->foreign('personID')->references('personID')->on('persons')->onDelete('cascade');

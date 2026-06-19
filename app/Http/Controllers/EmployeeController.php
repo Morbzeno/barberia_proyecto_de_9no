@@ -49,7 +49,7 @@ class EmployeeController extends Controller
             // person
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'rfc' => 'required|string|unique:persons,rfc|max:13',
+            'rfc' => 'required|string|unique:employees,rfc|max:13',
             'phone_number' => 'required|string|max:10',
             //employee
             'payment' => 'required|decimal:2|max:10000.00',
@@ -70,7 +70,7 @@ class EmployeeController extends Controller
                 $person = Person::create([
                     'name' => $request->name,
                     'last_name' => $request->last_name,
-                    'rfc' => $request->rfc,
+            
                     'phone_number' => $request->phone_number
                 ]);
                 $person->save();
@@ -79,6 +79,7 @@ class EmployeeController extends Controller
                     'userID' => $user->userID,
                     'personID' => $person->personID,
                     'payment' => $request->payment,
+                    'rfc' => $request->rfc,
                     'schedule' => $request->schedule,
                     'admin_type' => $request->admin_type,
                 ]);

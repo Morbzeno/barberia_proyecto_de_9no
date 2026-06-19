@@ -37,33 +37,38 @@ class ServiceController extends Controller
         ],200);
     }
 
-     public function store(Request $request){
+    public function store(Request $request) {
+        // 1. Validación corregida (sin barras sueltas y coincidiendo con Postman)
         $request->validate([
-            // user
             'name' => 'required|string|max:255',
-            'description' => 'required|string|max:255',
-            'price' => 'required|',
-            'aproxDuration' => 'required|Integer|',
+            'descripcion' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'aproxDuration' => 'required|integer',
         ]);
 
         try {
-            return DB::transaction(function () use ($request){
-                $service = Service::create([
+            // 2. Ejecutamos la transacción de forma segura
+            $service = DB::transaction(function () use ($request) {
+                return Service::create([
                     'name' => $request->name,
-                    'description' => $request->description,
+                    'description' => $request->descripcion, // Mapea tu JSON en español a la columna de la BD
                     'price' => $request->price,
                     'aproxDuration' => $request->aproxDuration
                 ]);
-
-                return response()->json([
-                    'message' => 'service creado correctamente',
-                    'data' => $service
-                ], 200);
             });
+
+            // 3. Retornamos la respuesta FUERA de la transacción una vez que todo salió bien
+            return response()->json([
+                'message' => 'Servicio creado correctamente',
+                'data' => $service
+            ], 201); // 201 es el código HTTP correcto para "Creado con éxito"
+
         } catch (\Exception $e) {
-                return response()->json([
-                    'message' => $e,
-                ], 500);
+            // 4. Captura limpia del error sin exponer datos sensibles del servidor
+            return response()->json([
+                'message' => 'Hubo un error al crear el servicio',
+                'error' => $e->getMessage() 
+            ], 500);
         }
     }
 

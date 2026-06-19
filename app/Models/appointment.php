@@ -9,7 +9,7 @@ class Appointment extends Model
 {
     use SoftDeletes;
     protected $primaryKey = 'appointmentID';
-    protected $fillable = ['clientID', 'employeeID', 'startHour', 'finishHour', 'notes', 'status'];
+    protected $fillable = ['clientID', 'employeeID', 'chairID', 'startHour', 'finishHour', 'notes', 'status'];
     
     public function client()
     {
