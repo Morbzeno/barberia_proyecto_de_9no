@@ -19,7 +19,7 @@ class Cart extends Model
     }
     public function producto_cart()
     {
-        return $this->hasMany(ProductsCart::class, 'productsCartId', 'productsCartId'); // Ajusta el nombre de la clave foránea si es necesario
+        return $this->hasMany(ProductsCart::class, 'cartID', 'cartID'); // Ajusta el nombre de la clave foránea si es necesario
     }
     public function sell()
     {

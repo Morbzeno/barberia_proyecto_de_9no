@@ -14,14 +14,13 @@ return new class extends Migration
         Schema::create('products_carts', function (Blueprint $table) {
             $table->id('productsCartId');
             $table->unsignedBigInteger('cartID');
-            $table->unsignedBigInteger('sellID');
-            $table->foreign('sellID')->references('sellID')->on('sells')->onDelete('cascade');
             $table->foreign('cartID')->references('cartID')->on('carts')->onDelete('cascade');
             $table->unsignedBigInteger('productID');
             $table->foreign('productID')->references('productID')->on('products')->onDelete('cascade');
             $table->integer('quantity');
             $table->decimal('subtotal', 10, 2 );
             $table->enum('state', ['waiting', 'sell'])->default('waiting');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

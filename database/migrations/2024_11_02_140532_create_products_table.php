@@ -19,10 +19,11 @@ return new class extends Migration
             $table->decimal('sell_price', 10, 2);
             $table->decimal('wholesale_price', 10, 2)->nullable();
             $table->decimal('buy_price', 10, 2);
-            $table->bigInteger('bar_code');
+            $table->bigInteger('bar_code')->unique();
             $table->integer('stock');
             $table->longText('description')->nullable();
             $table->enum('state', ['INACTIVO', 'ACTIVO'])->default('ACTIVO');
+            $table->softDeletes();
             $table->timestamps();
 
         });

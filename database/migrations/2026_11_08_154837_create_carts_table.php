@@ -18,6 +18,8 @@ return new class extends Migration
             $table->foreign('clientID')->references('clientID')->on('clients')->onDelete('cascade');
             $table->decimal('total', 10, 2)->default('0.00');
             $table->integer('discount')->nullable();
+            $table->enum('state', ['PENDING', 'COMPLETED', 'CANCELED'])->default('PENDING');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

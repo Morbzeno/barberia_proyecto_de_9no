@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('tags');
             $table->string('name');
             $table->text('description');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
