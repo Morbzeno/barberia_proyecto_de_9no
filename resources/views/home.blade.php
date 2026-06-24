@@ -18,7 +18,7 @@
 body{
     background:#0d0d0d;
     font-family:'Poppins', sans-serif;
-    color:white;
+    color:blue;
 }
 
 header{
