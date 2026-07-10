@@ -30,6 +30,7 @@ class AppointmentController extends Controller
 
     public function show($id){
         $appointment = Appointment::with('client', 'appointmentDetails.service')->find($id);
+        
         if (!$appointment){
             return response()->json([
                 'message' => 'cita no encontrada'
@@ -307,8 +308,10 @@ class AppointmentController extends Controller
         ], 200);
     }
 
+
     public function AlterAppointmentStatus($id, $newStatus){
         $appointment = Appointment::find($id);
+
         if (!$appointment){
             return response()->json([
                 'message' => 'cita no encontrada'

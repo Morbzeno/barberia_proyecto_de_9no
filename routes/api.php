@@ -41,13 +41,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/services', [ServiceController::class, 'index']);
     Route::get('/services/{id}', [ServiceController::class, 'show']);
     Route::post('/services', [ServiceController::class, 'store']);
     Route::put('/services/{id}', [ServiceController::class, 'update']);
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
-});
+// });
 
 // Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']);
@@ -57,13 +57,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
 // });
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/chairs', [ChairController::class, 'index']);
     Route::get('/chairs/{id}', [ChairController::class, 'show']);
     Route::post('/chairs', [ChairController::class, 'store']);
     Route::put('/chairs/{id}', [ChairController::class, 'update']);
     Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
-});
+// });
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
