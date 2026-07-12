@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AppointmentController;
 
 // Ruta de la Landing Page Principal con el calendario de reservas
 Route::get('/', function () {
@@ -16,3 +17,5 @@ Route::get('/login', function () {
 Route::get('/registro', function () {
     return view('auth.register');
 })->name('register');
+
+Route::get('/citas/{chairID}/{date}', [AppointmentController::class, 'showDay'])->name('appointments.index');

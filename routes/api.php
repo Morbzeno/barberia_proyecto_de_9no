@@ -52,6 +52,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']);
     Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
+    Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
     Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);

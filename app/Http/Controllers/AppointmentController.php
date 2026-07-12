@@ -43,6 +43,35 @@ class AppointmentController extends Controller
         ], 200);
     }
 
+    // public function showDay(){
+    //     $appointments = Appointment::with('client', 'appointmentDetails.service')
+    //     ->whereDate('startHour', '2026-06-19')->get()
+    //     ->where('chairID', 1);
+
+    //     return view('appointments.index', compact('appointments'));
+
+
+    //     // return response()->json([
+    //     //     'message' => 'aqui esta la cita',
+    //     //     'data' => $appointment
+    //     // ], 200);
+    // }
+
+    public function showDay($chairID, $date){
+        $appointments = Appointment::whereDate('startHour', $date)->get()
+        ->where('chairID', $chairID);
+
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'message' => 'aqui estan las citas del dia',
+                'data' => $appointments
+            ], 200);
+        }
+         return view('appointments.index', compact('appointments'));
+    }
+
+
     public function store(Request $request){
         $request->validate([
             'clientID' => 'required|exists:clients,clientID',
