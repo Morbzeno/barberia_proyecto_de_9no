@@ -12,20 +12,22 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller
 {
-    
     public function index(){
         $products = Product::with(['images', 'category'])->paginate(10);
         
-        if ($products->isEmpty()) {
+        if (request()->wantsJson()) {
+            if ($products->isEmpty()) {
+                return response()->json([
+                    "message" => "No se encontraron productos."
+                ], 400);
+            }
             return response()->json([
-                "message" => "No se encontraron productos."
-            ], 400);
+                "data" => $products,
+                "message" => "Productos obtenidos exitosamente."
+            ],200);
         }
 
-        return response()->json([
-            "data" => $products,
-            "message" => "Productos obtenidos exitosamente."
-        ],200);
+        return view('products.index', compact('products'));
     }
 
     public function show($id){

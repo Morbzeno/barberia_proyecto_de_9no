@@ -16,7 +16,7 @@ class CartController extends Controller
     public function index(Request $request)
     {
         // $user = $request->user();
-        $clientID = $request->input('clientID');
+        $clientID = 1; // Aquí deberías obtener el ID del cliente autenticado, por ejemplo: $request->user()->id;
         if (!$clientID) {
             return response()->json([
                 'status' => 'error',
@@ -35,16 +35,12 @@ class CartController extends Controller
         }
         
         // Si la solicitud pide JSON, devuelve los datos como JSON.
-        if ($request->wantsJson()) {
-            return response()->json($cart);
+        if (request()->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $cart
+            ], 200);
         }
-        
-        // Pasa los datos del carrito a la vista.
-        return response()->json([
-            'status' => 'success',
-            'data' => $cart
-        ], 200);
-        
 
     }
     public function show($id)
@@ -55,86 +51,103 @@ class CartController extends Controller
         }])->where('clientID', $id)->get();
 
         $cart->load(['client', 'producto_cart']);
+
+        if (request()->wantsJson()) {
+            if ($cart->isEmpty()) {
+                return response()->json([
+                    "message" => "Carrito no encontrado."
+                ], 404);
+            }
+            return response()->json([
+                'status' => 'success',
+                'data' => $cart
+            ], 200);
+        }
         
-        return response()->json([
-            'status' => 'success',
-            'data' => $cart
-        ], 200);
+        return view('cart.show', compact('cart'));
+
     }
     
 
-public function add(Request $request)
+public function add(Request $request, $productID)
 {
-    // 1. Mueve la validación fuera del try-catch si quieres que Laravel 
-    // maneje automáticamente los errores de validación en formato JSON.
-    // O déjala adentro, pero respondiendo JSON en el catch.
-    
-    $clientID = $request->input('clientID');
+    // Si necesitas que venga del formulario descomenta la línea de abajo,
+    // por ahora dejamos el valor por defecto igual que en tu código.
+    $clientID = $request->input('clientID', 1);
 
     try {
-        // Validar los datos del formulario
+        // Validar los datos necesarios
+        $request->merge(['clientID' => $clientID]); // Forzamos el cliente ID en el request para pasar la validación
         $request->validate([
-            'clientID' => 'required', // ¡Es buena idea validar también esto!
-            'id' => 'required|integer',
-            'price' => 'required|numeric|min:0',
-            'quantity' => 'required|integer|min:1',
+            'clientID' => 'required',
         ]);
 
-        // Obtener o crear un carrito asociado al cliente
+        // 1. Obtener el producto real usando su ID correcto de la URL y validar que exista
+        $product = Product::findOrFail($productID);
+
+        // 2. Obtener o crear un carrito asociado al cliente
         $cart = Cart::firstOrCreate(
             ['clientID' => $clientID],
             ['total' => 0]
         );
 
-        // Registrar o actualizar el producto en `products_cart`
+        // 3. Registrar o actualizar el producto en `products_cart`
         $productCart = ProductsCart::where('cartID', $cart->cartID)
-            ->where('productID', $request->id)
+            ->where('productID', $product->productID)
             ->where('state', 'waiting')
             ->first();
 
-        if ($productCart) {
-            // Si ya existe, incrementar la cantidad y el subtotal
-            $productCart->quantity += $request->quantity;
-            $productCart->subtotal += $request->price * $request->quantity;
-            $productCart->save();
+        // Usamos la propiedad 'sell_price' que es la que viene en tu estructura de Productos
+        $precioProducto = (float) $product->sell_price;
 
+        if ($productCart) {
+            // Si ya existe, incrementar la cantidad y recalcular subtotal
+            $productCart->quantity += 1;
+            $productCart->subtotal = $productCart->quantity * $precioProducto;
+            $productCart->save();
         } else {
-            // Si no existe, crear un nuevo registro
+            // Si no existe, crear un nuevo registro en el carrito
             ProductsCart::create([
-                'cartID' => $cart->cartID,
-                'productID' => $request->id,
-                'quantity' => $request->quantity,
-                'subtotal' => $request->price * $request->quantity,
-                'state' => 'waiting',
+                'cartID'    => $cart->cartID,
+                'productID' => $product->productID,
+                'quantity'  => 1,
+                'subtotal'  => $precioProducto,
+                'state'     => 'waiting',
             ]);
         }
 
-        // Calcular el nuevo total del carrito basado en los productos "waiting"
+        // 4. Calcular el nuevo total del carrito basado en todos los productos "waiting"
         $total = ProductsCart::where('cartID', $cart->cartID)
             ->where('state', 'waiting')
             ->sum('subtotal');
 
-        // Actualizar el total del carrito
+        // 5. Actualizar el total general del carrito
         $cart->total = $total;
         $cart->save();
 
+        // Cargamos las relaciones para la respuesta JSON (Asegúrate de que coincidan con tus modelos)
         $cart->load(['client', 'producto_cart']);
 
         return response()->json([
             'status' => 'success',
+            'message' => 'Producto añadido con éxito',
             'data' => $cart
         ], 200);
 
     } catch (\Illuminate\Validation\ValidationException $e) {
-        // SOLUCIÓN: Responder con JSON en lugar de usar back()
         return response()->json([
             'status' => 'error',
             'message' => 'Error de validación',
-            'errors' => $e->errors() // Esto te dirá exactamente QUÉ campo falló
+            'errors' => $e->errors()
         ], 422);
 
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'El producto especificado no existe.'
+        ], 440);
+
     } catch (\Exception $e) {
-        // SOLUCIÓN: Responder con JSON para errores generales
         return response()->json([
             'status' => 'error',
             'message' => 'Hubo un problema al añadir el producto: ' . $e->getMessage()

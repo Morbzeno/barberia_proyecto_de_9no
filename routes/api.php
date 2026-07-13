@@ -102,8 +102,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::get('/cart', [CartController::class, 'index']);
-Route::post('/cart', [CartController::class, 'add']);
-Route::post('/cart/{id}', [CartController::class, 'more']);
+Route::post('/cart/{product}', [CartController::class, 'add']);
+// Route::post('/cart/{id}', [CartController::class, 'more']);
 Route::get('/cart/{id}', [CartController::class, 'show']);
 Route::put('/cart/{id}', [CartController::class, 'update']);
 
