@@ -101,11 +101,11 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::get('/cart', [CartController::class, 'index']);
-Route::post('/cart/{product}', [CartController::class, 'add']);
-// Route::post('/cart/{id}', [CartController::class, 'more']);
-Route::get('/cart/{id}', [CartController::class, 'show']);
-Route::put('/cart/{id}', [CartController::class, 'update']);
+    Route::get('/cart/{id}', [CartController::class, 'show']);
+Route::post('/addCart/{product}/{client}', [CartController::class, 'add']);
+Route::delete('/quitCart/{product}/{client}', [CartController::class, 'quitItem']);
+Route::put('/moreCart/{product}/{client}', [CartController::class, 'more']);
+Route::put('/lessCart/{product}/{client}', [CartController::class, 'less']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);

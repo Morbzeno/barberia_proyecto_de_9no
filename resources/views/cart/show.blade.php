@@ -123,11 +123,11 @@
                             </div>
                         </div>
 
-                        <button onclick="alert('Procediendo a la pasarela de pago para el carrito #{{ $c['cartID'] ?? 1 }}')" 
+                        <!-- <button onclick="alert('Procediendo a la pasarela de pago para el carrito #{{ $c['cartID'] ?? 1 }}')" 
                                 style="width: 100%; padding: 12px; background-color: #4f46e5; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; margin-bottom: 12px;">
                             Proceder al Pago
                         </button>
-                        
+                         -->
                         <a href="{{ route('products.index') }}" style="display: block; text-align: center; text-decoration: none; width: 100%; padding: 10px; background-color: transparent; color: #4f46e5; border: 1px solid #4f46e5; border-radius: 6px; font-weight: 500; font-size: 14px; box-sizing: border-box;">
                             Continuar Comprando
                         </a>

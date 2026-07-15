@@ -16,51 +16,48 @@ class AppointmentController extends Controller
     public function index(){
         $appointments = Appointment::with('client', 'appointmentDetails.service')->paginate(10);
         
-        if ($appointments->isEmpty()){
+        if (request()->wantsJson()) {
+            if ($appointments->isEmpty()){
+                return response()->json([
+                    'message' => 'no se encontraron citas'
+                ], 400);
+            }
+
             return response()->json([
-                'message' => 'no se encontraron citas'
-            ], 400);
+                'message' => 'aqui estan las citas',
+                'data' => $appointments
+            ], 200);
         }
 
-        return response()->json([
-            'message' => 'aqui estan las citas',
-            'data' => $appointments
-        ], 200);
+        return view('appointments.index', compact('appointments'));
     }
 
     public function show($id){
         $appointment = Appointment::with('client', 'appointmentDetails.service')->find($id);
         
-        if (!$appointment){
+        if (request()->wantsJson() ){
+            if (!$appointment){
+                return response()->json([
+                    'message' => 'cita no encontrada'
+                ], 404);
+            }
+
             return response()->json([
-                'message' => 'cita no encontrada'
-            ], 404);
+                'message' => 'aqui esta la cita',
+                'data' => $appointment
+            ], 200);
         }
 
-        return response()->json([
-            'message' => 'aqui esta la cita',
-            'data' => $appointment
-        ], 200);
+        if (!$appointment){
+            return redirect()->route('appointments.index')->with('error', 'Cita no encontrada');
+        }
+        return view('appointments.show', compact('appointment'));
     }
 
-    // public function showDay(){
-    //     $appointments = Appointment::with('client', 'appointmentDetails.service')
-    //     ->whereDate('startHour', '2026-06-19')->get()
-    //     ->where('chairID', 1);
-
-    //     return view('appointments.index', compact('appointments'));
-
-
-    //     // return response()->json([
-    //     //     'message' => 'aqui esta la cita',
-    //     //     'data' => $appointment
-    //     // ], 200);
-    // }
-
     public function showDay($chairID, $date){
-        $appointments = Appointment::whereDate('startHour', $date)->get()
-        ->where('chairID', $chairID);
-
+        $appointments = Appointment::whereDate('startHour', $date)
+        ->where('chairID', $chairID)
+        ->get();
 
         if (request()->wantsJson()) {
             return response()->json([
@@ -68,9 +65,9 @@ class AppointmentController extends Controller
                 'data' => $appointments
             ], 200);
         }
-         return view('appointments.index', compact('appointments'));
-    }
 
+        return view('appointments.index', compact('appointments'));
+    }
 
     public function store(Request $request){
         $request->validate([
@@ -326,17 +323,25 @@ class AppointmentController extends Controller
 
     public function destroy($id){
         $appointment = Appointment::find($id);
-        if (!$appointment){
+
+        if (request()->wantsJson() ){
+            if (!$appointment){
+                return response()->json([
+                    'message' => 'cita no encontrada'
+                ], 404);
+            }
+            $appointment->delete();
             return response()->json([
-                'message' => 'cita no encontrada'
-            ], 404);
+                'message' => 'cita eliminada exitosamente'
+            ], 200);
+        }
+
+        if (!$appointment){
+            return redirect()->route('appointments.index')->with('error', 'Cita no encontrada');
         }
         $appointment->delete();
-        return response()->json([
-            'message' => 'cita eliminada exitosamente'
-        ], 200);
+        return redirect()->route('appointments.index')->with('success', 'Cita eliminada exitosamente');
     }
-
 
     public function AlterAppointmentStatus($id, $newStatus){
         $appointment = Appointment::find($id);
