@@ -10,46 +10,47 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Image;
 
 class CategoryController extends Controller{
-//  implements HasMiddleware
-// {
-//     public static function middleware(){
-             
-//         return [
-//             new Middleware('auth:sanctum', except: ['index', 'show'])
-//                  ];
-//              }
-            
-//             /**
-//              * Display a listing of the resource.
-//              */
-    
+
     public function index(){
         $categories = Category::with('products', 'images')->paginate(10);
 
-        if ($categories->isEmpty()) {
+        if (request()->wantsJson()) {
+            if ($categories->isEmpty()) {
+                return response()->json([
+                    "message" => "No categories found."
+                ], 404);
+           }
+            
             return response()->json([
-                "message" => "No categories found."
-            ], 404);
+                "data" => $categories,
+                "message" => "Categories retrieved successfully."
+            ], 200);
         }
-
-        return response()->json([
-            "data" => $categories,
-            "message" => "Categories retrieved successfully."
-        ], 200);
+        if ($categories->isEmpty()) {
+            return redirect()->back()->with('error', 'No categories found.');
+        }
+        return view('categories.index', compact('categories'));
     }
 
     public function show($id){
         $category = Category::with('products', 'images')->find($id);
 
-        if (!$category) {
+        if(request()->wantsJson()) {
+            if (!$category) {
+                return response()->json([
+                    "message" => "Category not found."
+                ], 404);
+            }
             return response()->json([
-                "message" => "Category not found."
-            ], 404);
+                "data" => $category,
+                "message" => "Category retrieved successfully."
+            ], 200);
         }
-        return response()->json([
-            "data" => $category,
-            "message" => "Category retrieved successfully."
-        ], 200);
+
+        if (!$category) {
+            return redirect()->back()->with('error', 'Category not found.');
+        }
+        return view('categories.show', compact('category'));
     }
 
     public function store(Request $request){
@@ -93,10 +94,13 @@ class CategoryController extends Controller{
     public function update(Request $request, $id){
         $category = Category::find($id);
 
-        if (!$category){
-            return response()->json([
-                "message" => "categoria no encontrada"
-            ],404);
+        if ($request()->wantsJson()){
+            if (!$category) {
+                return response()->json([
+                    "message" => "Category not found."
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Category not found.');
         }
 
         $request->validate([
@@ -128,10 +132,15 @@ class CategoryController extends Controller{
     public function destroy($id){
         $category = Category::find($id);
 
-        if (!$category){
-            return response()->json([
-                "message" => "categoria no encontrada"
-            ], 404);
+        if (request()->wantsJson()) {
+            if (!$category) {
+                return response()->json([
+                    "message" => "Category not found."
+                ], 404);
+            }
+        }
+        if (!$category) {
+            return redirect()->back()->with('error', 'Category not found.');
         }
 
         try {
@@ -141,15 +150,22 @@ class CategoryController extends Controller{
 
             DB::commit();
 
-            return response()->json([
-                "message" => "category deleted"
-            ], 200);
-        
+            if (request()->wantsJson()) {
+                return response()->json([
+                    "message" => "Category deleted successfully."
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Category deleted successfully.');
+
         } catch (\Exception $e){
             DB::rollBack();
-            return response()->json([
-                "message" => "Error deleting category: " . $e->getMessage()
-            ], 500);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    "message" => "Error deleting category: " . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Error deleting category: ' . $e->getMessage());
         }
     }
 }

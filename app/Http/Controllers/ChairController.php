@@ -13,17 +13,22 @@ use Illuminate\Support\Facades\DB;
 class ChairController extends Controller
 {
     public function index(){
-        $Chairs = Chair::with('services')->paginate(10);
-        if($Chairs->isEmpty()){
-            return response()->json([
-                'message' => 'no se encontraron Chairs',
+        $chairs = Chair::with('services')->paginate(10);
+        if (request()->wantsJson()) {
+            if($chairs->isEmpty()){
+                return response()->json([
+                    'message' => 'no se encontraron Chairs',
                 ],400);
+            }
+            return response()->json([
+                'message' => 'Todos los Chairs aquí',
+                'data' => $chairs
+            ],200);
         }
-
-        return response()->json([
-            'message' => 'Todos los Chairs aquí',
-            'data' => $Chairs
-        ],200);
+        if($chairs->isEmpty()){
+            return redirect()->back()->with('error', 'No se encontraron Chairs');
+        }
+        return view('chairs.index', compact('chairs'));
     }
 
     public function show($id){
