@@ -13,7 +13,7 @@ class Chair extends Model
 
     public function services()
     {
-        return $this->belongsToMany(Service::class, 'chairs_services', 'chairID', 'serviceID', 'chairID', 'serviceID');
+        return $this->belongsToMany(Service::class, 'chair_service', 'chairID', 'serviceID', 'chairID', 'serviceID');
     }
 
     public function appointments()

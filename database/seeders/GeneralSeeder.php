@@ -78,28 +78,83 @@ class GeneralSeeder extends Seeder
             ]);
         }
 
+
+        // Insertar servicios
         DB::table('services')->insert([
-            'name' => Str::random(10),
-            'description' => Str::random(255),
-            'price' => $faker->randomFloat(2, 10, 1000),
-            'aproxDuration' => $faker->randomNumber(2),
+            'name' => "Corte clásico",
+            'description' => "Tijera y máquina, acabado a navaja",
+            'price' => 280.0,
+            'aproxDuration' => 20,
         ]);
         DB::table('services')->insert([
-            'name' => Str::random(10),
-            'description' => Str::random(255),
-            'price' => $faker->randomFloat(2, 10, 1000),
-            'aproxDuration' => $faker->randomNumber(2),
+            'name' => "Fade moderno",
+            'description' => "Degradado de precisión y diseño",
+            'price' => 350.0,
+            'aproxDuration' => 30,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Corte niño",
+            'description' => "Hasta 12 años",
+            'price' => 220.0,
+            'aproxDuration' => 10,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Spa Premium",
+            'description' => "Corte + limpieza facial + exfoliación",
+            'price' => 450.0,
+            'aproxDuration' => 45,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Limpieza facial",
+            'description' => "Vapor, exfoliación y mascarilla",
+            'price' => 300.0,
+            'aproxDuration' => 30,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Barba & Estilo",
+            'description' => "Perfilado, toalla caliente y aceites premium",
+            'price' => 260.0,
+            'aproxDuration' => 25,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Afeitado clásico",
+            'description' => "Toalla caliente y navaja",
+            'price' => 240.0,
+            'aproxDuration' => 20,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Perfilado de cejas",
+            'description' => "Perfilado de cejas",
+            'price' => 120.0,
+            'aproxDuration' => 20,
+        ]);
+        DB::table('services')->insert([
+            'name' => "Ritual Machin",
+            'description' => "Corte + barba + spa premium",
+            'price' => 680.0,
+            'aproxDuration' => 50,
         ]);
 
-        $servicesIds = Service::pluck('serviceID')->toArray();
-        Chair::factory()->count(5)->create()->each(function ($chair) use ($servicesIds) {
-            
-            if (!empty($servicesIds)) {
-                $randomServices = array_rand(array_flip($servicesIds), rand(1, 3));
-                $servicesToAttach = is_array($randomServices) ? $randomServices : [$randomServices];
-                $chair->services()->attach($servicesToAttach);
-            }
-        });
+        // Lista de sillas con sus IDs de servicios a asociar
+        $chairsData = [
+            ['chairName' => 'silla 1', 'services' => [1, 2, 3]],
+            ['chairName' => 'silla 2', 'services' => [1, 2, 3]],
+            ['chairName' => 'silla 3', 'services' => [1, 2, 3, 6, 7, 8]],
+            ['chairName' => 'silla 4', 'services' => [1, 2, 3, 6, 7, 8]],
+            ['chairName' => 'silla 5', 'services' => [1, 2, 3, 6, 7, 8]],
+            ['chairName' => 'silla 6', 'services' => [1, 2, 3, 6, 7, 8]],
+            ['chairName' => 'silla 7', 'services' => [1, 2, 3, 4, 5, 6, 7, 8, 9]],
+            ['chairName' => 'silla 8', 'services' => [1, 2, 3, 4, 5, 6, 7, 8, 9]],
+        ];
 
+        foreach ($chairsData as $data) {
+            // 1. Crear el registro en la tabla 'chairs'
+            $chair = Chair::create([
+                'chairName' => $data['chairName'],
+            ]);
+
+            // 2. Adjuntar los servicios en la tabla pivote
+            $chair->services()->attach($data['services']);
+        }
     }
 }
