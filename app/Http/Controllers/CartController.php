@@ -11,22 +11,22 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 
 class CartController extends Controller
-// implements HasMiddleware
 {
 
     public function show($id){
         if (!$id) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'El campo clientID es obligatorio.'
-            ], 400);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El campo clientID es obligatorio.'
+                ], 400);
+            }
+            return back()->with('error', 'El campo clientID es obligatorio.');
         }
 
         $cart = Cart::with(['client', 'producto_cart' => function ($query) {
             $query->where('state', 'waiting')->with('producto');
         }])->where('clientID', $id)->get();
-
-        $cart->load(['client', 'producto_cart']);
 
         if (request()->wantsJson()) {
             if ($cart->isEmpty()) {
@@ -47,32 +47,36 @@ class CartController extends Controller
         try {
             $product = Product::find($productID);
 
-            // if (!$product || !$product->is_active) {
-            //     return response()->json([
-            //         'status' => 'error',
-            //         'message' => 'El producto no está activo.'
-            //     ], 400);
-            // }
             if (!$product) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El producto no está activo.'
-                ], 400);
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'El producto no existe o no está activo.'
+                    ], 404);
+                }
+                return back()->with('error', 'El producto no existe o no está activo.');
             }
+
             if ($product->stock <= 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El producto no tiene stock disponible.'
-                ], 400);
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'El producto no tiene stock disponible.'
+                    ], 400);
+                }
+                return back()->with('error', 'El producto no tiene stock disponible.');
             }
 
             $client = Client::find($clientID);
 
             if (!$client) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El cliente no está registrado.'
-                ], 400);
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'El cliente no está registrado.'
+                    ], 404);
+                }
+                return back()->with('error', 'El cliente no está registrado.');
             }
 
             $cart = Cart::firstOrCreate(
@@ -110,28 +114,41 @@ class CartController extends Controller
 
             $cart->load(['client', 'producto_cart']);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Producto añadido con éxito',
-                'data' => $cart
-            ], 200);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Producto añadido con éxito',
+                    'data' => $cart
+                ], 200);
+            }
+
+            return back()->with('success', 'Producto añadido con éxito');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Error de validación',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return back()->withErrors($e->errors());
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'El producto especificado no existe.'
-            ], 440);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El producto especificado no existe.'
+                ], 404);
+            }
+            return back()->with('error', 'El producto especificado no existe.');
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Hubo un problema al añadir el producto: ' . $e->getMessage()
-            ], 500);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hubo un problema al añadir el producto: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Hubo un problema al añadir el producto: ' . $e->getMessage());
         }
     }
 
@@ -140,29 +157,39 @@ class CartController extends Controller
             $product = Product::find($productID);
 
             if (!$product) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El producto no está activo.'
-                ], 400);
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'El producto no existe o no está activo.'
+                    ], 404);
+                }
+                return back()->with('error', 'El producto no existe o no está activo.');
             }
 
             $client = Client::find($clientID);
 
             if (!$client) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El cliente no está registrado.'
-                ], 400);
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'El cliente no está registrado.'
+                    ], 404);
+                }
+                return back()->with('error', 'El cliente no está registrado.');
             }
-                        
-            ProductsCart::where('cartID', Cart::where('clientID', $clientID)->value('clientID'))
-                        ->where('productID', $productID)->where('state', 'waiting')
-                        ->delete();
-            $total=ProductsCart::where('cartID', Cart::where('clientID', $clientID)->value('clientID'))->where('state', 'waiting')
-            ->sum('subtotal');
-
+            
             $cart = Cart::where('clientID', $clientID)->first();
+
             if ($cart) {
+                ProductsCart::where('cartID', $cart->cartID)
+                    ->where('productID', $productID)
+                    ->where('state', 'waiting')
+                    ->delete();
+
+                $total = ProductsCart::where('cartID', $cart->cartID)
+                    ->where('state', 'waiting')
+                    ->sum('subtotal');
+
                 $cart->total = $total;
                 $cart->save();
             }
@@ -191,143 +218,171 @@ class CartController extends Controller
         $product = Product::find($productID);
 
         if (!$product) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'El producto no está activo.'
-            ], 400);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El producto no existe o no está activo.'
+                ], 404);
+            }
+            return back()->with('error', 'El producto no existe o no está activo.');
         }
 
         $client = Client::find($clientID);
 
         if (!$client) {
-            return response()->json([
-               'status' => 'error',
-                'message' => 'El cliente no está registrado.'
-            ], 400);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El cliente no está registrado.'
+                ], 404);
+            }
+            return back()->with('error', 'El cliente no está registrado.');
         }
+
         // 1. Obtener el carrito del cliente
         $cart = Cart::where('clientID', $clientID)->first();
-        
-        // CORRECCIÓN: Si no encuentra el carrito, $cart será null. 
-        // Usamos '!$cart' en lugar de 'isEmpty()'.
+
         if (!$cart) {
-            return response()->json(['status' => 'error', 'message' => 'Carrito no encontrado para este cliente.'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Carrito no encontrado para este cliente.'], 404);
+            }
+            return back()->with('error', 'Carrito no encontrado para este cliente.');
         }
 
-        // 2. Verificar si el producto existe en la base de datos
-        $product = Product::find($productID);
-        
-        // CORRECCIÓN: Si find() no encuentra el registro, devuelve null.
-        // Además, tenías '!$product->isEmpty()', lo que significaba "Si NO está vacío (o sea, si existe), da error". Estaba invertido.
-        if (!$product) {
-            return response()->json(['status' => 'error', 'message' => 'Producto no encontrado.'], 404);
-        }
-
-        // 3. Buscar el producto en el carrito con estado 'waiting'
+        // 2. Buscar el producto en el carrito con estado 'waiting'
         $productCart = ProductsCart::where('cartID', $cart->cartID)
             ->where('productID', $productID)
             ->where('state', 'waiting')
             ->first();
 
         if (!$productCart) {
-            return response()->json(['status' => 'error', 'message' => 'Producto no encontrado en el carrito con el estado requerido.'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Producto no encontrado en el carrito con el estado requerido.'], 404);
+            }
+            return back()->with('error', 'Producto no encontrado en el carrito con el estado requerido.');
         }
 
         $productCart->quantity += 1;
-        $productCart->subtotal = $productCart->quantity * $product->sell_price; // Precio directo de la base de datos
+        $productCart->subtotal = $productCart->quantity * $product->sell_price;
         $productCart->save();
 
-        // 5. Recalcular el total del carrito
+        // 3. Recalcular el total del carrito
         $cart->total = ProductsCart::where('cartID', $cart->cartID)
             ->where('state', 'waiting')
             ->sum('subtotal');
         $cart->save();
 
-        return response()->json(['status' => 'success', 'data' => $cart], 200);
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $cart], 200);
+        }
+
+        return back()->with('success', 'Cantidad incrementada con éxito');
     }
 
     public function less($productID, $clientID){
         $product = Product::find($productID);
 
         if (!$product) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'El producto no está activo.'
-            ], 400);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El producto no existe o no está activo.'
+                ], 404);
+            }
+            return back()->with('error', 'El producto no existe o no está activo.');
         }
 
         $client = Client::find($clientID);
 
         if (!$client) {
-            return response()->json([
-               'status' => 'error',
-                'message' => 'El cliente no está registrado.'
-            ], 400);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El cliente no está registrado.'
+                ], 404);
+            }
+            return back()->with('error', 'El cliente no está registrado.');
         }
  
         $cart = Cart::where('clientID', $clientID)->first();
         if (!$cart) {
-            return response()->json(['status' => 'error', 'message' => 'Carrito no encontrado para este cliente.'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Carrito no encontrado para este cliente.'], 404);
+            }
+            return back()->with('error', 'Carrito no encontrado para este cliente.');
         }
     
-        $product = Product::find($productID);
-        if (!$product) {
-            return response()->json(['status' => 'error', 'message' => 'Producto no encontrado.'], 404);
-        }
-    
-        // Buscar el producto en el carrito con estado 'waiting'
+        // Buscar el producto en el carrito con estado 'waiting' y cantidad mayor a 1
         $productCart = ProductsCart::where('cartID', $cart->cartID)
             ->where('productID', $productID)
-            ->where('state', 'waiting')->where('quantity', '>', 1)
+            ->where('state', 'waiting')
+            ->where('quantity', '>', 1)
             ->first();
     
         if (!$productCart) {
-            return response()->json(['status' => 'error', 'message' => 'Producto no encontrado en el carrito con el estado requerido.'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Producto no encontrado en el carrito o la cantidad es la mínima (1).'], 404);
+            }
+            return back()->with('error', 'Producto no encontrado en el carrito o la cantidad es la mínima (1).');
         }
     
         // Actualizar la cantidad y el subtotal del producto
         $productCart->quantity -= 1;
-        $productCart->subtotal = $productCart->quantity * $product->sell_price; // Precio directo de la base de datos
+        $productCart->subtotal = $productCart->quantity * $product->sell_price;
         $productCart->save();
     
-        // Recalcular el total del carrito sumando todos los subtotales de los productos en el carrito
+        // Recalcular el total del carrito sumando todos los subtotales
         $cart->total = ProductsCart::where('cartID', $cart->cartID)->where('state', 'waiting')->sum('subtotal');
         $cart->save();
     
-        return response()->json(['status' => 'success', 'data' => $cart], 200);
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $cart], 200);
+        }
+
+        return back()->with('success', 'Cantidad disminuida con éxito');
     }
     
     public function clear(Request $request){
         $clientID = $request->input('clientID');
         try {
-            // Eliminar el ítem del carrito de la biblioteca Cart
+            $cart = Cart::where('clientID', $clientID)->first();
 
+            if (!$cart) {
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Carrito no encontrado'
+                    ], 404);
+                }
+                return back()->with('error', 'Carrito no encontrado');
+            }
 
-            // Eliminar el registro correspondiente en `products_cart`
-            ProductsCart::where('cartID', Cart::where('clientID', $clientID)->value('id'))->where('state', 'waiting')
-                        ->delete();
-                        $total=ProductsCart::where('cartID', Cart::where('clientID', $clientID)->value('id'))->where('state', 'waiting')
-                        ->sum('subtotal');
-
+            // Eliminar los registros correspondientes en `products_cart`
+            ProductsCart::where('cartID', $cart->cartID)
+                ->where('state', 'waiting')
+                ->delete();
 
             // Actualizar el total del carrito
-            $cart = Cart::where('clientID', $clientID)->first();
-            if ($cart) {
-                $cart->total = 0;
-                $cart->save();
-            }
-            if(!$cart){
+            $cart->total = 0;
+            $cart->save();
+
+            if (request()->wantsJson()) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'cart not found'
-                ], 404);
+                    'message' => 'Carrito vaciado con éxito'
+                ], 200);
             }
-            return response()->json([
-                'status' => 'success',
-                'message' => 'cart deleted successfully'
-            ], 200);
+
+            return back()->with('success', 'Carrito vaciado con éxito');
+
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Hubo un problema al eliminar el producto: ' . $e->getMessage()]);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hubo un problema al vaciar el carrito: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->withErrors(['error' => 'Hubo un problema al vaciar el carrito: ' . $e->getMessage()]);
         }
     }
 
@@ -338,15 +393,21 @@ class CartController extends Controller
         }])->where('clientID', $clientID)->first();
 
         if (!$cart) {
-            return response()->json(['status' => 'error', 'message' => 'Carrito no encontrado'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Carrito no encontrado'], 404);
+            }
+            return back()->with('error', 'Carrito no encontrado');
         }
 
         // Calcular el total del carrito (sólo los productos en estado 'waiting')
-        $total = ProductsCart::where('cartID', $cart->id)->where('state', 'waiting')->sum('subtotal');
+        $total = ProductsCart::where('cartID', $cart->cartID)->where('state', 'waiting')->sum('subtotal');
 
         // Si el carrito está vacío
         if ($total <= 0) {
-            return response()->json(['status' => 'error', 'message' => 'El carrito está vacío'], 400);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'El carrito está vacío'], 400);
+            }
+            return back()->with('error', 'El carrito está vacío');
         }
 
         // Obtener la configuración de PayPal
@@ -361,7 +422,7 @@ class CartController extends Controller
                 'purchase_units' => [
                     [
                         'amount' => [
-                            'currency_code' => 'USD', // O la moneda que uses
+                            'currency_code' => 'USD',
                             'value' => $total
                         ],
                         'description' => 'Compra de productos en tu carrito'
@@ -375,27 +436,36 @@ class CartController extends Controller
 
         // Verificar la respuesta de PayPal
         if ($response->failed()) {
-            return response()->json(['status' => 'error', 'message' => 'Error al crear la orden de PayPal'], 500);
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Error al crear la orden de PayPal'], 500);
+            }
+            return back()->with('error', 'Error al crear la orden de PayPal');
         }
 
-        // Devolver el ID de la orden o el enlace a PayPal
         $paypal_order = $response->json();
 
-        return response()->json([
-            'status' => 'success',
-            'order_id' => $paypal_order['id'],
-            'paypal_url' => $paypal_order['links'][1]['href'] // URL para redirigir al usuario a PayPal
-        ], 200);
+        if (request()->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'order_id' => $paypal_order['id'],
+                'paypal_url' => $paypal_order['links'][1]['href']
+            ], 200);
+        }
+
+        return redirect()->away($paypal_order['links'][1]['href']);
     }
-    // Método para manejar la respuesta exitosa de PayPal (cuando el usuario paga)
+
     public function paypalReturn(Request $request){
-        // Aquí manejarías la confirmación de la transacción si el pago fue exitoso
-        // Podrías verificar el pago con PayPal usando el 'order_id' o 'token' devuelto.
-        return response()->json(['status' => 'success', 'message' => 'Pago realizado con éxito']);
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Pago realizado con éxito']);
+        }
+        return redirect()->route('cart.show', $request->input('clientID'))->with('success', 'Pago realizado con éxito');
     }
-    // Método para manejar la cancelación de PayPal (cuando el usuario cancela el pago)
+
     public function paypalCancel(Request $request){
-        // Aquí manejarías si el usuario cancela el pago
-        return response()->json(['status' => 'error', 'message' => 'Pago cancelado por el usuario']);
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'error', 'message' => 'Pago cancelado por el usuario']);
+        }
+        return redirect()->route('cart.show', $request->input('clientID'))->with('error', 'Pago cancelado por el usuario');
     }
 }

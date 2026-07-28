@@ -2,192 +2,243 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Image;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         $products = Product::with(['images', 'category'])->paginate(10);
-        
+
         if (request()->wantsJson()) {
             if ($products->isEmpty()) {
                 return response()->json([
-                    "message" => "No se encontraron productos."
-                ], 400);
+                    'message' => 'No se encontraron productos.'
+                ], 404);
             }
+
             return response()->json([
-                "data" => $products,
-                "message" => "Productos obtenidos exitosamente."
-            ],200);
+                'message' => 'Productos obtenidos exitosamente.',
+                'data'    => $products
+            ], 200);
+        }
+
+        if ($products->isEmpty()) {
+            return redirect()->back()->with('error', 'No se encontraron productos.');
         }
 
         return view('products.index', compact('products'));
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $product = Product::with(['images', 'category'])->find($id);
 
-        if (!$product) {
+        if (request()->wantsJson()) {
+            if (!$product) {
+                return response()->json([
+                    'message' => 'Producto no encontrado.'
+                ], 404);
+            }
+
             return response()->json([
-                "message" => "Producto no encontrado."
-            ], 404);
+                'message' => 'Producto obtenido exitosamente.',
+                'data'    => $product
+            ], 200);
         }
 
-        return response()->json([
-            "data" => $product,
-            "message" => "Producto obtenido exitosamente."
-        ],200);
+        if (!$product) {
+            return redirect()->back()->with('error', 'Producto no encontrado.');
+        }
+
+        return view('products.show', compact('product'));
     }
 
-    public function main(){
-        $products = Product::with(['images'])->paginate(10, ['*'], 'page_products');
-        
-        if ($products->isEmpty()) {
-            return response()->json([
-                "message" => "No se encontraron productos."
-            ], 400);
-        }
-        
+    public function main()
+    {
+        $products = Product::with(['images', 'category'])->paginate(10, ['*'], 'page_products');
         $categories = Category::with('products')->paginate(20, ['*'], 'page_categories');
 
-        if ($categories->isEmpty()) {
+        if (request()->wantsJson()) {
+            if ($products->isEmpty() && $categories->isEmpty()) {
+                return response()->json([
+                    'message' => 'No se encontraron productos ni categorías.'
+                ], 404);
+            }
+
             return response()->json([
-                "message" => "No categories found."
-            ], 404);
+                'message'         => 'Productos y categorías obtenidos exitosamente.',
+                'data_products'   => $products,
+                'data_categories' => $categories
+            ], 200);
         }
 
-        return response()->json([
-            "data_products" => $products,
-            "data_categories" => $categories,
-            "message" => "Productos obtenidos exitosamente."
-        ],200);
+        return view('products.main', compact('products', 'categories'));
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
-            'categoryID' => 'required|integer|exists:categories,categoryID|',
-            'name' => 'required|string|max:255',
-            'sell_price' => 'required|numeric',
+            'categoryID'  => 'required|integer|exists:categories,categoryID',
+            'name'        => 'required|string|max:255',
+            'sell_price'  => 'required|numeric|min:0',
+            'buy_price'   => 'required|numeric|min:0',
             'description' => 'required|string',
-            'stock' => 'required|integer',
-            'buy_price' => 'required|numeric',
-            'bar_code' => 'required|numeric|unique:products,bar_code',
-            'state' => 'required|in:ACTIVO,INACTIVO',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'stock'       => 'required|integer|min:0',
+            'bar_code'    => 'required|string|unique:products,bar_code',
+            'state'       => 'required|in:ACTIVO,INACTIVO',
+            'images.*'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
         try {
             DB::beginTransaction();
 
-            $product = Product::create($request->all());
-        
+            $productData = $request->only([
+                'categoryID', 'name', 'sell_price', 'buy_price',
+                'description', 'stock', 'bar_code', 'state'
+            ]);
+
+            $product = Product::create($productData);
+
             if ($request->hasFile('images')) {
                 $imagesIds = [];
                 foreach ($request->file('images') as $file) {
                     $path = $file->store('products', 'public');
                     $image = Image::create(['ImageURL' => $path]);
-                    $imagesIds[] = $image->imageID;
+                    $imagesIds[] = $image->imageID ?? $image->id;
                 }
                 $product->images()->attach($imagesIds);
             }
-        
-            $product->load(['images', 'category']);
-        
-            foreach ($product->images as $img) {
-                $img->ImageURL = url('storage/' . $img->ImageURL);
-            }
+
             DB::commit();
 
-            return response()->json([
-                "data" => $product,
-                "message" => "Producto creado exitosamente."
-            ], 201);
+            $product->load(['images', 'category']);
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Producto creado exitosamente.',
+                    'data'    => $product
+                ], 201);
+            }
+
+            return redirect()->back()->with('success', 'Producto creado exitosamente.');
 
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
 
-            return response()->json([
-                "message" => "Error al crear el producto: " . $e->getMessage()
-            ], 500);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al crear el producto: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Error al crear el producto: ' . $e->getMessage());
         }
     }
-    
-    public function update(Request $request, $id){
+
+    public function update(Request $request, $id)
+    {
         $product = Product::find($id);
 
         if (!$product) {
-            return response()->json([
-                "message" => "Producto no encontrado."
-            ], 404);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Producto no encontrado.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Producto no encontrado.');
         }
 
+        $productId = $product->productID ?? $product->id;
+
         $request->validate([
-            'category_id' => 'integer|exists:categories,id',
-            'name' => 'string|max:255',
-            'sell_price' => 'numeric',
-            'wholesale_price' => 'numeric',
-            'buy_price' => 'numeric',
-            'bar_code' => 'numeric|unique:products,bar_code,' . $id,
-            'stock' => 'integer',
-            'description' => 'string',
-            'state' => 'in:ACTIVO,INACTIVO',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'categoryID'      => 'sometimes|integer|exists:categories,categoryID',
+            'name'            => 'sometimes|string|max:255',
+            'sell_price'      => 'sometimes|numeric|min:0',
+            'wholesale_price' => 'sometimes|numeric|min:0',
+            'buy_price'       => 'sometimes|numeric|min:0',
+            'bar_code'        => [
+                'sometimes', 'string',
+                Rule::unique('products', 'bar_code')->ignore($productId, $product->getKeyName() ?? 'productID')
+            ],
+            'stock'           => 'sometimes|integer|min:0',
+            'description'     => 'sometimes|string',
+            'state'           => 'sometimes|in:ACTIVO,INACTIVO',
+            'images.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         try {
             DB::beginTransaction();
-            
-            $product->update($request->all());
+
+            $productData = $request->only([
+                'categoryID', 'name', 'sell_price', 'wholesale_price', 'buy_price',
+                'bar_code', 'stock', 'description', 'state'
+            ]);
+
+            $product->update($productData);
 
             if ($request->hasFile('images')) {
+                // Eliminación física y lógica de imágenes previas
                 foreach ($product->images as $image) {
                     if (Storage::disk('public')->exists($image->ImageURL)) {
                         Storage::disk('public')->delete($image->ImageURL);
                     }
                     $image->delete();
                 }
+                $product->images()->detach();
 
                 $imagesIds = [];
                 foreach ($request->file('images') as $file) {
                     $path = $file->store('products', 'public');
                     $image = Image::create(['ImageURL' => $path]);
-                    $imagesIds[] = $image->imageID;
+                    $imagesIds[] = $image->imageID ?? $image->id;
                 }
                 $product->images()->attach($imagesIds);
             }
 
-            $product->load(['images', 'categories']);
-            
-            foreach ($product->images as $img) {
-                $img->ImageURL = url('storage/' . $img->ImageURL);
-            }
-
             DB::commit();
 
-            return response()->json([
-                "data" => $product,
-                "message" => "Producto actualizado exitosamente."
-            ], 200);
+            $product->load(['images', 'category']);
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Producto actualizado exitosamente.',
+                    'data'    => $product
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Producto actualizado exitosamente.');
+
         } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                "message" => "Error al actualizar el producto: " . $e->getMessage()
-            ], 500);
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al actualizar el producto: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
         }
     }
 
-    public function destroy($id){
-        $product = Product::find($id);
+    public function destroy($id)
+    {
+        $product = Product::with('images')->find($id);
 
-        if (!$product){
-            return response()->json([
-                'message' => 'Producto no encontrado'
-            ], 404);
+        if (!$product) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Producto no encontrado.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Producto no encontrado.');
         }
 
         try {
@@ -200,68 +251,120 @@ class ProductController extends Controller
                 $image->delete();
             }
 
+            $product->images()->detach();
             $product->delete();
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Producto eliminado exitosamente'
-            ], 200);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Producto eliminado exitosamente.'
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Producto eliminado exitosamente.');
+
         } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'message' => 'Error al eliminar el producto: ' . $e->getMessage()
-            ], 500);
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al eliminar el producto: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
         }
     }
 
-    public function searchname($search){
+    public function searchname($search)
+    {
         try {
-            // Realizar la búsqueda por nombre, categoría (por nombre) y marca
-            $product = Product::with(['images', 'category'])
+            $products = Product::with(['images', 'category'])
                 ->join('categories', 'categories.categoryID', '=', 'products.categoryID')
                 ->where(function ($query) use ($search) {
-                    // Buscar por nombre del producto, nombre de la categoría, o nombre de la marca
                     $query->where('products.name', 'like', '%' . $search . '%')
-                        ->orWhere('categories.name', 'like', '%' . $search . '%') // Buscar en el nombre de la categoría
-                        ->orWhere('products.bar_code', 'like', '%' . $search . '%'); // Buscar en el código de barras
+                        ->orWhere('categories.name', 'like', '%' . $search . '%')
+                        ->orWhere('products.bar_code', 'like', '%' . $search . '%');
                 })
                 ->select('products.*')
                 ->paginate(16);
 
-            return response()->json([
-                "data" => $product,
-                "message" => "objetos obtenidos exitosamente."
-            ],200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Si no se encuentra el producto, se lanza una excepción de tipo 404
-            throw new NotFoundHttpException("No se encontró el producto con el identificador o nombre: " . $search);
+            if (request()->wantsJson()) {
+                if ($products->isEmpty()) {
+                    return response()->json([
+                        'message' => 'No se encontraron productos para la búsqueda.'
+                    ], 404);
+                }
+
+                return response()->json([
+                    'message' => 'Productos obtenidos exitosamente.',
+                    'data'    => $products
+                ], 200);
+            }
+
+            if ($products->isEmpty()) {
+                return redirect()->back()->with('error', 'No se encontraron productos para la búsqueda.');
+            }
+
+            return view('products.index', compact('products'));
+
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al buscar productos: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error al buscar productos: ' . $e->getMessage());
         }
     }
 
-    public function searchCategory($category){
-        if (!$category){
-            return response()->json([
-                "message" => "datos inexistentes"
-            ], 404);
+    public function searchCategory($category)
+    {
+        if (!$category) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Categoría no válida.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Categoría no válida.');
         }
 
         try {
-            $product = Product::with(['images', 'category'])
-                ->join('categories', 'categories.categoryID', '=', 'products.categoryID') // Join con la tabla 'categories'
-                ->where(function ($query) use ($category) {
-                    $query->where('categories.categoryID', '=', $category);
-                })
-                ->select('products.*') // Asegurarse de seleccionar solo los campos de la tabla 'products'
-                ->paginate(10); // Esto lanza una excepción si no se encuentra el producto
+            $products = Product::with(['images', 'category'])
+                ->join('categories', 'categories.categoryID', '=', 'products.categoryID')
+                ->where('categories.categoryID', '=', $category)
+                ->select('products.*')
+                ->paginate(10);
 
-            return response()->json([
-                "data" => $product,
-                "message" => "Productos obtenidos exitosamente."
-            ],200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Si no se encuentra el producto, se lanza una excepción de tipo 404
-            throw new NotFoundHttpException("No se encontró el producto con el identificador o nombre: " . $category);
+            if (request()->wantsJson()) {
+                if ($products->isEmpty()) {
+                    return response()->json([
+                        'message' => 'No se encontraron productos para esta categoría.'
+                    ], 404);
+                }
+
+                return response()->json([
+                    'message' => 'Productos obtenidos exitosamente.',
+                    'data'    => $products
+                ], 200);
+            }
+
+            if ($products->isEmpty()) {
+                return redirect()->back()->with('error', 'No se encontraron productos para esta categoría.');
+            }
+
+            return view('products.index', compact('products'));
+
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al filtrar por categoría: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error al filtrar por categoría: ' . $e->getMessage());
         }
     }
 }

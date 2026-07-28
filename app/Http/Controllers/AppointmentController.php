@@ -10,7 +10,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-
 class AppointmentController extends Controller
 {
     public function index(){
@@ -81,9 +80,10 @@ class AppointmentController extends Controller
         ]);
 
         try {
-            return DB::transaction(function() use ($request) {
+            $appointment = DB::transaction(function() use ($request) {
                 $servicesIds = collect($request->services)->pluck('serviceID')->toArray();
-                $totalDuration = (int) Service::whereIn('serviceID', $servicesIds)->sum('aproxDuration');
+                $uniqueServicesIds = array_unique($servicesIds);
+                $totalDuration = (int) Service::whereIn('serviceID', $uniqueServicesIds)->sum('aproxDuration');
 
                 $newStart = Carbon::parse($request->startHour);
                 $newEnd = $newStart->copy()->addMinutes($totalDuration);
@@ -91,13 +91,13 @@ class AppointmentController extends Controller
                 // =========================================================================
                 // VALIDACIÓN 1: ¿La silla seleccionada soporta TODOS los servicios pedidos?
                 // =========================================================================
-                $supportedServicesCount = DB::table('chairs_services')
+                $supportedServicesCount = DB::table('chair_service')
                     ->where('chairID', $request->chairID)
-                    ->whereIn('serviceID', $servicesIds)
+                    ->whereIn('serviceID', $uniqueServicesIds)
                     ->count();
 
                 // Si el conteo en la tabla pivote no coincide con la cantidad de servicios solicitados...
-                if ($supportedServicesCount !== count($servicesIds)) {
+                if ($supportedServicesCount !== count($uniqueServicesIds)) {
                     throw ValidationException::withMessages([
                         'chairID' => "La silla seleccionada no cuenta con el equipamiento para realizar todos los servicios solicitados."
                     ]);
@@ -106,21 +106,6 @@ class AppointmentController extends Controller
                 // =========================================================================
                 // VALIDACIÓN 2: ¿El empleado está trabajando y está libre? (Traslape Empleado)
                 // =========================================================================
-            
-                // $dayOfWeek = $newStart->dayOfWeek;
-                // $isWorking = DB::table('employee_schedules')
-                //     ->where('employeeID', $request->employeeID)
-                //     ->where('day_of_week', $dayOfWeek)
-                //     ->where('start_time', '<=', $newStart->toTimeString())
-                //     ->where('end_time', '>=', $newEnd->toTimeString())
-                //        ->exists();
-
-                // if (!$isWorking) {
-                //     throw ValidationException::withMessages([
-                //         'startHour' => "El empleado no trabaja en ese horario."
-                //     ]);
-                // }
-
                 $employeeOverlap = Appointment::where('employeeID', $request->employeeID)
                     ->whereDate('startHour', $newStart->toDateString())
                     ->where(function($query) use ($newStart, $newEnd) {
@@ -137,18 +122,19 @@ class AppointmentController extends Controller
                 // =========================================================================
                 // VALIDACIÓN 3: ¿La SILLA está libre en ese rango de tiempo? (Traslape Silla)
                 // =========================================================================
-                    $chairOverlap = Appointment::where('chairID', $request->chairID)
-                        ->whereDate('startHour', $newStart->toDateString())
-                        ->where(function($query) use ($newStart, $newEnd) {
-                            $query->where('startHour', '<', $newEnd->toDateTimeString())  // <-- Forzado a String de MySQL
-                                ->where('finishHour', '>', $newStart->toDateTimeString()); // <-- Forzado a String de MySQL
-                        })->exists();
+                $chairOverlap = Appointment::where('chairID', $request->chairID)
+                    ->whereDate('startHour', $newStart->toDateString())
+                    ->where(function($query) use ($newStart, $newEnd) {
+                        $query->where('startHour', '<', $newEnd->toDateTimeString())  // <-- Forzado a String de MySQL
+                            ->where('finishHour', '>', $newStart->toDateTimeString()); // <-- Forzado a String de MySQL
+                    })->exists();
 
-                    if ($chairOverlap) {
-                        throw ValidationException::withMessages([
-                            'chairID' => "La silla seleccionada ya está ocupada por otra cita en este horario."
-                        ]);
-                    }
+                if ($chairOverlap) {
+                    throw ValidationException::withMessages([
+                        'chairID' => "La silla seleccionada ya está ocupada por otra cita en este horario."
+                    ]);
+                }
+
                 // =========================================================================
                 // GUARDAR CITA
                 // =========================================================================
@@ -169,22 +155,38 @@ class AppointmentController extends Controller
                     ]);
                 }
 
+                return $appointment;
+            });
+
+            if (request()->wantsJson()) {
                 return response()->json([
                     'message' => 'Cita creada exitosamente',
                     'data' => $appointment->load('client', 'appointmentDetails.service')
                 ], 201);
-            });
+            }
+
+            return redirect()->route('appointments.index')->with('success', 'Cita creada exitosamente');
+
         } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
+            if (request()->wantsJson()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+            return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage())->withInput();
         }
     }
     
     public function update(Request $request, $id){
         $appointment = Appointment::find($id);
         if (!$appointment) {
-            return response()->json(['message' => 'Cita no encontrada'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Cita no encontrada'], 404);
+            }
+            return redirect()->route('appointments.index')->with('error', 'Cita no encontrada');
         }
 
         $request->validate([
@@ -193,13 +195,13 @@ class AppointmentController extends Controller
             'chairID' => 'sometimes|exists:chairs,chairID', // <-- Silla opcional en el update
             'startHour' => 'sometimes|date',
             'services' => 'sometimes|array',
-            'services.*.serviceID' => 'sometimes|exists:services,servicesID',
+            'services.*.serviceID' => 'sometimes|exists:services,serviceID', // Corregido: servicesID -> serviceID
             'services.*.totalPrice' => 'sometimes|numeric',
             'status' => 'sometimes|in:pending,in_process,cancelled,Finished'
         ]);
 
         try {
-            return DB::transaction(function() use ($request, $appointment) {
+            $appointment = DB::transaction(function() use ($request, $appointment) {
                 
                 // 1. OBTENER LOS SERVICIOS (Los nuevos del request o los que ya tenía la cita)
                 if ($request->has('services')) {
@@ -207,6 +209,8 @@ class AppointmentController extends Controller
                 } else {
                     $servicesIds = $appointment->appointmentDetails()->pluck('serviceID')->toArray();
                 }
+
+                $uniqueServicesIds = array_unique($servicesIds);
 
                 // 2. IDENTIFICAR QUÉ SILLA SE USARÁ (La nueva o la actual)
                 $chairId = $request->get('chairID', $appointment->chairID);
@@ -216,17 +220,17 @@ class AppointmentController extends Controller
                 // =========================================================================
                 $supportedServicesCount = DB::table('chair_service')
                     ->where('chairID', $chairId)
-                    ->whereIn('serviceID', $servicesIds)
+                    ->whereIn('serviceID', $uniqueServicesIds)
                     ->count();
 
-                if ($supportedServicesCount !== count($servicesIds)) {
+                if ($supportedServicesCount !== count($uniqueServicesIds)) {
                     throw ValidationException::withMessages([
                         'chairID' => "La silla seleccionada no cuenta con el equipamiento para los servicios requeridos en esta cita."
                     ]);
                 }
 
                 // 3. CALCULAR EL NUEVO RANGO DE TIEMPO
-                $totalDuration = Service::whereIn('servicesID', $servicesIds)->sum('aproxDuration');
+                $totalDuration = (int) Service::whereIn('serviceID', $uniqueServicesIds)->sum('aproxDuration'); // Corregido: servicesID -> serviceID
                 $newStart = Carbon::parse($request->get('startHour', $appointment->startHour));
                 $newEnd = $newStart->copy()->addMinutes($totalDuration);
                 
@@ -256,7 +260,8 @@ class AppointmentController extends Controller
                     ->where('employeeID', $employeeId)
                     ->whereDate('startHour', $newStart->toDateString())
                     ->where(function($query) use ($newStart, $newEnd) {
-                        $query->where('startHour', '<', $newEnd)->where('finishHour', '>', $newStart);
+                        $query->where('startHour', '<', $newEnd->toDateTimeString())
+                            ->where('finishHour', '>', $newStart->toDateTimeString());
                     })->exists();
 
                 if ($employeeOverlap) {
@@ -272,7 +277,8 @@ class AppointmentController extends Controller
                     ->where('chairID', $chairId)
                     ->whereDate('startHour', $newStart->toDateString())
                     ->where(function($query) use ($newStart, $newEnd) {
-                        $query->where('startHour', '<', $newEnd)->where('finishHour', '>', $newStart);
+                        $query->where('startHour', '<', $newEnd->toDateTimeString())
+                            ->where('finishHour', '>', $newStart->toDateTimeString());
                     })->exists();
 
                 if ($chairOverlap) {
@@ -308,16 +314,28 @@ class AppointmentController extends Controller
                     }
                 }
 
+                return $appointment;
+            });
+
+            if (request()->wantsJson()) {
                 return response()->json([
                     'message' => 'Cita actualizada exitosamente',
                     'data' => $appointment->load('client', 'appointmentDetails.service')
                 ], 200);
-            });
+            }
+
+            return redirect()->route('appointments.index')->with('success', 'Cita actualizada exitosamente');
 
         } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
+            if (request()->wantsJson()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+            return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al actualizar: ' . $e->getMessage()], 500);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Error al actualizar: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Error al actualizar: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -347,28 +365,40 @@ class AppointmentController extends Controller
         $appointment = Appointment::find($id);
 
         if (!$appointment){
-            return response()->json([
-                'message' => 'cita no encontrada'
-            ], 404);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'cita no encontrada'
+                ], 404);
+            }
+            return redirect()->route('appointments.index')->with('error', 'Cita no encontrada');
         }
+
         try {
-            return DB::transaction(function() use ($newStatus, $appointment){
+            $appointment = DB::transaction(function() use ($newStatus, $appointment){
                 if ($newStatus) {
                     $appointment->status = $newStatus;
                     $appointment->save();
                 }
 
+                return $appointment;
+            });
+
+            if (request()->wantsJson()) {
                 return response()->json([
                     'message' => 'cita actualizada exitosamente',
                     'data' => $appointment->load('client', 'appointmentDetails.service')
                 ], 200);
+            }
 
-            });
+            return redirect()->back()->with('success', 'Estatus de la cita actualizado exitosamente');
+
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 }
-
