@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Ventas - Reporte PDF</title>
+    <title>Dashboard de Ventas con Gráficos - Reporte PDF</title>
     <style>
         @page {
             margin: 0;
@@ -75,6 +75,28 @@
             font-weight: 800;
             color: #0284c7;
             margin-top: 4px;
+        }
+
+        /* Gráficos */
+        .charts-grid {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .chart-card {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .chart-img {
+            width: 100%;
+            max-height: 190px;
+            object-fit: contain;
         }
 
         /* Layout del Resumen Analítico */
@@ -161,7 +183,7 @@
             color: #0f172a;
         }
 
-        /* Estilo General de Tablas */
+        /* Tablas */
         .table {
             width: 100%;
             border-collapse: collapse;
@@ -209,7 +231,6 @@
             border-top: 1px solid #cbd5e1;
         }
 
-        /* Badges */
         .badge {
             padding: 2px 6px;
             border-radius: 4px;
@@ -224,7 +245,7 @@
 <body>
 
     @php
-        // Procesamiento de métricas dinámicas
+        // Procesamiento de métricas
         $totalVentas = count($sales);
         $totalIngresos = 0;
         $totalIva = 0;
@@ -240,7 +261,7 @@
             $totalIngresos += $totalSale;
             $totalIva += $ivaSale;
 
-            // Agrupación por Ubicación / Ciudad
+            // Ubicación
             $ciudad = data_get($sale, 'direction.city', 'Sin ciudad');
             $estado = data_get($sale, 'direction.state', '');
             $ubicacionKey = $estado ? "{$ciudad}, {$estado}" : $ciudad;
@@ -251,7 +272,7 @@
             $desgloseUbicaciones[$ubicacionKey]['count']++;
             $desgloseUbicaciones[$ubicacionKey]['total'] += $totalSale;
 
-            // Agrupación por Productos en el Carrito
+            // Productos en Carrito
             $productsCart = data_get($sale, 'cart.products_cart', data_get($sale, 'cart.productsCart', []));
 
             foreach ($productsCart as $item) {
@@ -268,9 +289,49 @@
                 $desgloseProductos[$productName]['total'] += $subtotal;
             }
         }
+
+        // --- CONSTRUCCIÓN DINÁMICA DE GRÁFICOS (QuickChart API) ---
+
+        // 1. Gráfico de Barras: Ventas por Producto ($)
+        $chartProductosConfig = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_keys($desgloseProductos),
+                'datasets' => [[
+                    'label' => 'Total Vendido ($)',
+                    'data' => array_column($desgloseProductos, 'total'),
+                    'backgroundColor' => '#0284c7'
+                ]]
+            ],
+            'options' => [
+                'plugins' => [
+                    'legend' => ['display' => false],
+                    'title' => ['display' => true, 'text' => 'Ingresos por Producto ($)']
+                ]
+            ]
+        ];
+        $chartProductosUrl = "https://quickchart.io/chart?w=400&h=200&bkg=white&c=" . urlencode(json_encode($chartProductosConfig));
+
+        // 2. Gráfico de Dona: Ventas por Ubicación
+        $chartUbicacionesConfig = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => array_keys($desgloseUbicaciones),
+                'datasets' => [[
+                    'data' => array_column($desgloseUbicaciones, 'total'),
+                    'backgroundColor' => ['#0284c7', '#38bdf8', '#0ea5e9', '#0369a1', '#64748b']
+                ]]
+            ],
+            'options' => [
+                'plugins' => [
+                    'title' => ['display' => true, 'text' => 'Distribución por Ubicación ($)']
+                ]
+            ]
+        ];
+        $chartUbicacionesUrl = "https://quickchart.io/chart?w=400&h=200&bkg=white&c=" . urlencode(json_encode($chartUbicacionesConfig));
     @endphp
 
-    <!-- Encabezado del Reporte -->
+    <!-- Encabezado -->
     <div class="header">
         <div>
             <h1>Dashboard de Ventas</h1>
@@ -281,7 +342,7 @@
         </div>
     </div>
 
-    <!-- KPIs del Dashboard -->
+    <!-- KPIs -->
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="kpi-title">Ventas Totales</div>
@@ -301,7 +362,17 @@
         </div>
     </div>
 
-    <!-- RESUMEN ANALÍTICO (Desglose por Producto y Ubicación) -->
+    <!-- SECCIÓN DE GRÁFICOS ANALÍTICOS -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <img class="chart-img" src="{{ $chartProductosUrl }}" alt="Gráfico de Ventas por Producto">
+        </div>
+        <div class="chart-card">
+            <img class="chart-img" src="{{ $chartUbicacionesUrl }}" alt="Gráfico de Ventas por Ubicación">
+        </div>
+    </div>
+
+    <!-- RESUMEN ANALÍTICO EN TABLAS -->
     <div class="summary-grid">
         <!-- Productos más vendidos -->
         <div class="summary-box">
@@ -367,7 +438,6 @@
             $createdAt = data_get($sale, 'created_at');
             $purchaseMethod = data_get($sale, 'purchase_method', 'No especificado');
             
-            // Cliente y Dirección
             $clientID = data_get($sale, 'client.clientID', 'N/A');
             $direction = data_get($sale, 'direction');
             $dirName = data_get($direction, 'name', 'N/A');
@@ -376,7 +446,6 @@
             $state = data_get($direction, 'state', 'N/A');
             $postalCode = data_get($direction, 'postal_code', 'N/A');
 
-            // Carrito
             $cartTotal = (float) data_get($sale, 'cart.total', 0);
             $iva = (float) data_get($sale, 'iva', 0);
             $total = (float) data_get($sale, 'total', 0);
@@ -405,7 +474,7 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Productos del Carrito -->
+                <!-- Tabla de Productos -->
                 <table class="table">
                     <thead>
                         <tr>
@@ -437,7 +506,6 @@
                     </tbody>
                 </table>
 
-                <!-- Totales de la Venta -->
                 <div class="totals-summary">
                     <table class="totals-table">
                         <tr>
