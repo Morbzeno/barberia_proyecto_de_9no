@@ -9,6 +9,7 @@ use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class AppointmentController extends Controller
 {
@@ -400,5 +401,30 @@ class AppointmentController extends Controller
             }
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    public function invoke($filter, $date){
+
+        if ($filter === 'day') {
+            $appointments = Appointment::whereDate('startHour', $date)->with('client', 'appointmentDetails.service')
+            ->get();
+        }
+        else if ($filter === 'month') {
+            $appointments = Appointment::whereMonth('startHour', Carbon::parse($date)->month)
+            ->whereYear('startHour', Carbon::parse($date)->year)
+            ->with('client', 'appointmentDetails.service')
+            ->get();
+        }
+        else if ($filter === 'year') {
+            $appointments = Appointment::whereYear('startHour', Carbon::parse($date)->year)
+            ->with('client', 'appointmentDetails.service')
+            ->get();
+        }
+        else {
+            return response()->json([
+                'message' => 'Filtro no válido. Use "day", "month" o "year".'
+            ], 400);
+        }
+        Pdf::view('pdf.invoice', ['appointments' => $appointments, 'filter' => $filter, 'date' => $date])->save('C:/Users/USER/OneDrive/Documents/invoice.pdf');
     }
 }

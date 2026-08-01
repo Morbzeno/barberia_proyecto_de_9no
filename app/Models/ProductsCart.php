@@ -17,7 +17,6 @@ class ProductsCart extends Model
     {
         return $this->belongsTo(Cart::class, 'cartID', 'cartID');
     }
-
     public function producto()
     {
         return $this->belongsTo(Product::class, 'productID', 'productID'); // Ajusta el campo si es necesario

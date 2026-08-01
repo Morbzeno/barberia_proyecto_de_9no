@@ -11,6 +11,7 @@ use App\Http\Controllers\ChairController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SellController;
 
 // Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //     return $request->user();
@@ -118,3 +119,9 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+Route::get('/invoke/{filter}/{date}', [AppointmentController::class, 'invoke']);
+Route::get('/pdf/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
+
+route::get('/sells', [SellController::class, 'index']);
+route::post('/sells/{clientID}', [SellController::class, 'store']);

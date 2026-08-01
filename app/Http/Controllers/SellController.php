@@ -7,12 +7,14 @@ use App\Models\Sell;
 use App\Models\ProductsCart;
 use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelPdf\Facades\Pdf;
+use Carbon\Carbon;
 
 class SellController extends Controller
 {
     public function index()
     {
-        $sells = Sell::with(['client', 'direction', 'cart.productsCart.product'])->paginate(10);
+        $sells = Sell::with(['client', 'direction', 'cart.productsCart.producto'])->paginate(10);
 
         if (request()->wantsJson()) {
             if ($sells->isEmpty()) {
@@ -58,15 +60,15 @@ class SellController extends Controller
         return view('sells.show', compact('sell'));
     }
 
-    public function store(Request $request, $clientId)
+    public function store(Request $request, $clientID)
     {
         $request->validate([
-            'direction_id'    => 'required|exists:directions,id',
+            'directionID'    => 'required|exists:directions,directionID',
             'purchase_method' => 'nullable|string|max:255',
         ]);
 
         // Obtener el carrito activo del cliente
-        $cart = Cart::where('client_id', $clientId)->first();
+        $cart = Cart::where('clientID', $clientID)->first();
 
         if (!$cart) {
             if (request()->wantsJson()) {
@@ -77,10 +79,10 @@ class SellController extends Controller
             return redirect()->back()->with('error', 'No se encontró un carrito activo para este cliente.');
         }
 
-        $cartId = $cart->id ?? $cart->cart_id;
+        $cartID = $cart->cartID;
 
         // Validar subtotal de productos pendientes
-        $total = ProductsCart::where('cart_id', $cartId)
+        $total = ProductsCart::where('cartID', $cartID)
             ->where('state', 'waiting')
             ->sum('subtotal');
 
@@ -101,22 +103,21 @@ class SellController extends Controller
 
             // Crear el registro de la venta
             $sell = Sell::create([
-                'cart_id'         => $cartId,
-                'client_id'       => $clientId,
-                'direction_id'    => $request->direction_id,
+                'cartID'         => $cartID,
+                'clientID'       => $clientID,
+                'directionID'    => $request->directionID,
                 'total'           => $totalConIva,
                 'iva'             => $iva,
                 'purchase_method' => $request->purchase_method,
             ]);
 
-            $sellId = $sell->id ?? $sell->sell_id;
+            $sellID = $sell->sellID;
 
             // Actualizar el estado de los ítems a "sell" en una sola consulta
-            ProductsCart::where('cart_id', $cartId)
+            ProductsCart::where('cartID', $cartID)
                 ->where('state', 'waiting')
                 ->update([
                     'state'   => 'sell',
-                    'sell_id' => $sellId
                 ]);
 
             // Actualizar total del carrito
@@ -148,8 +149,7 @@ class SellController extends Controller
         }
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id){
         $sell = Sell::find($id);
 
         if (!$sell) {
@@ -164,7 +164,7 @@ class SellController extends Controller
         try {
             DB::beginTransaction();
 
-            $sellId = $sell->id ?? $sell->sell_id;
+            $sellId = $sell->id ?? $sell->sellID;
 
             // Revertir estado de los productos en el carrito si es necesario
             ProductsCart::where('sell_id', $sellId)
@@ -197,4 +197,26 @@ class SellController extends Controller
             return redirect()->back()->with('error', 'Error al eliminar la venta: ' . $e->getMessage());
         }
     }
+
+    public function dashboard_pdf($filter, $date){
+
+        if ($filter === 'day') {
+            $sells = Sell::with(['client', 'direction', 'cart.productsCart.producto'])->whereDate('created_at', $date)
+            ->get();
+        }
+        else if ($filter === 'month') {
+            $sells = Sell::whereMonth('created_at', Carbon::parse($date)->month)
+            ->whereYear('created_at', Carbon::parse($date)->year)
+            ->with(['client', 'direction', 'cart.productsCart.producto'])
+            ->get();
+        }
+        else if ($filter === 'year') {
+            $sells = Sell::whereYear('created_at', Carbon::parse($date)->year)
+            ->with(['client', 'direction', 'cart.productsCart.producto'])
+            ->get();
+        }
+
+        Pdf::view('pdf.sells', ['sales' => $sells])->save('C:/Users/USER/OneDrive/Documents/pdf.pdf');
+    }
+
 }

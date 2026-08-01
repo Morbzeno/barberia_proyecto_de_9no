@@ -17,7 +17,7 @@ class Cart extends Model
     {
         return $this->belongsTo(Client::class, 'clientID', 'clientID'); // Ajusta el nombre de la clave foránea si es necesario
     }
-    public function producto_cart()
+    public function productsCart()
     {
         return $this->hasMany(ProductsCart::class, 'cartID', 'cartID'); // Ajusta el nombre de la clave foránea si es necesario
     }
