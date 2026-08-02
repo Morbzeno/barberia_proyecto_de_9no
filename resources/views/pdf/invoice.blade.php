@@ -18,8 +18,8 @@
             background-color: #f8fafc;
             color: #1e293b;
             margin: 0;
-            padding: 30px;
-            font-size: 12px;
+            padding: 25px;
+            font-size: 11px;
         }
 
         /* Header */
@@ -28,12 +28,12 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #0f172a;
-            padding-bottom: 15px;
+            padding-bottom: 12px;
             margin-bottom: 20px;
         }
 
         .header h1 {
-            font-size: 22px;
+            font-size: 20px;
             margin: 0;
             color: #0f172a;
             text-transform: uppercase;
@@ -41,7 +41,7 @@
         }
 
         .header p {
-            margin: 3px 0 0 0;
+            margin: 2px 0 0 0;
             color: #64748b;
             font-size: 11px;
         }
@@ -49,7 +49,7 @@
         /* Cards Dashboard KPI */
         .kpi-grid {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             margin-bottom: 20px;
         }
 
@@ -59,11 +59,11 @@
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
         .kpi-title {
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             font-weight: 700;
             color: #64748b;
@@ -71,17 +71,61 @@
         }
 
         .kpi-value {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 800;
             color: #0f172a;
             margin-top: 4px;
         }
 
+        .kpi-subtitle {
+            font-size: 9px;
+            color: #0284c7;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        /* Sección del Gráfico de Adopción */
+        .chart-section {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .chart-container {
+            flex: 1;
+            text-align: center;
+        }
+
+        .chart-img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: contain;
+        }
+
+        .chart-details {
+            flex: 1;
+        }
+
+        .chart-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+            text-transform: uppercase;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+        }
+
         /* Layout del Resumen Analítico (Tablas lado a lado) */
         .summary-grid {
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin-bottom: 22px;
         }
 
         .summary-box {
@@ -93,18 +137,18 @@
         }
 
         .summary-box-title {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: #0f172a;
             text-transform: uppercase;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #38bdf8;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #0284c7;
         }
 
-        /* Listado e Historico de Citas */
+        /* Secciones */
         .section-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #334155;
             margin-bottom: 12px;
@@ -137,8 +181,8 @@
         .info-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 10px;
             background: #f1f5f9;
             padding: 10px;
             border-radius: 6px;
@@ -152,7 +196,8 @@
             font-weight: 700;
             color: #475569;
             display: block;
-            font-size: 10px;
+            font-size: 9px;
+            text-transform: uppercase;
         }
 
         .info-item span {
@@ -168,16 +213,17 @@
         .table th {
             background: #f1f5f9;
             color: #334155;
-            font-size: 10px;
+            font-size: 9px;
+            text-transform: uppercase;
             text-align: left;
-            padding: 6px 8px;
+            padding: 6px;
             border-bottom: 1px solid #cbd5e1;
         }
 
         .table td {
-            padding: 6px 8px;
+            padding: 6px;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .text-right { text-align: right; }
@@ -188,7 +234,7 @@
             background: #f8fafc;
         }
 
-        /* Badges Status */
+        /* Badges */
         .badge {
             padding: 2px 6px;
             border-radius: 4px;
@@ -198,6 +244,8 @@
         }
         .badge-pending { background: #fef3c7; color: #92400e; }
         .badge-completed { background: #dcfce7; color: #166534; }
+        .badge-app { background: #e0f2fe; color: #0369a1; }
+        .badge-walkin { background: #f1f5f9; color: #475569; }
     </style>
 </head>
 <body>
@@ -205,24 +253,29 @@
     @php
         // Variables globales
         $totalCitas = $appointments->count();
-        $filtro = $filter ?? 'Todos';
-        $diaSeleccionado = $date ?? 'Todos los días';
         $totalIngresos = 0;
         $totalServicios = 0;
+        $filtro = $filter ?? 'Todos';
+        $diaSeleccionado = $date ?? 'Todos los días';
         $duracionTotalMinutos = 0;
+
+        // Contadores para Comparativa: App vs Presencial (ID #1)
+        $citasApp = 0;
+        $citasWalkIn = 0;
+        $ingresosApp = 0;
+        $ingresosWalkIn = 0;
 
         // Estructuras para los desgloses del resumen
         $desgloseServicios = [];
         $desgloseEmpleados = [];
 
         foreach ($appointments as $cita) {
-            // Conteo de citas por empleado
+            $clientID = data_get($cita, 'clientID', data_get($cita, 'client.clientID'));
+            
+            // Empleado
             $empID = $cita->employeeID ?? 'Sin asignar';
             if (!isset($desgloseEmpleados[$empID])) {
-                $desgloseEmpleados[$empID] = [
-                    'citas_count' => 0,
-                    'total' => 0
-                ];
+                $desgloseEmpleados[$empID] = ['citas_count' => 0, 'total' => 0];
             }
             $desgloseEmpleados[$empID]['citas_count']++;
 
@@ -240,27 +293,56 @@
 
                 // Conteo de servicios solicitados
                 if (!isset($desgloseServicios[$nombreServicio])) {
-                    $desgloseServicios[$nombreServicio] = [
-                        'count' => 0,
-                        'total' => 0
-                    ];
+                    $desgloseServicios[$nombreServicio] = ['count' => 0, 'total' => 0];
                 }
                 $desgloseServicios[$nombreServicio]['count']++;
                 $desgloseServicios[$nombreServicio]['total'] += $precio;
             }
 
             $desgloseEmpleados[$empID]['total'] += $subtotalCita;
+
+            // Comparación ID 1 (Presencial) vs App
+            if ($clientID == 1) {
+                $citasWalkIn++;
+                $ingresosWalkIn += $subtotalCita;
+            } else {
+                $citasApp++;
+                $ingresosApp += $subtotalCita;
+            }
         }
 
         $horasTotales = floor($duracionTotalMinutos / 60);
         $minutosRestantes = $duracionTotalMinutos % 60;
+
+        // Porcentajes de adopción de la app
+        $pctApp = $totalCitas > 0 ? round(($citasApp / $totalCitas) * 100, 1) : 0;
+        $pctWalkIn = $totalCitas > 0 ? round(($citasWalkIn / $totalCitas) * 100, 1) : 0;
+
+        // CONFIGURACIÓN DEL GRÁFICO CON QUICKCHART API
+        $chartAdopcionConfig = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => ["App ($pctApp%)", "Presencial ID#1 ($pctWalkIn%)"],
+                'datasets' => [[
+                    'data' => [$citasApp, $citasWalkIn],
+                    'backgroundColor' => ['#0284c7', '#64748b']
+                ]]
+            ],
+            'options' => [
+                'plugins' => [
+                    'legend' => ['position' => 'bottom'],
+                    'title' => ['display' => true, 'text' => 'Origen de las Citas']
+                ]
+            ]
+        ];
+        $chartAdopcionUrl = "https://quickchart.io/chart?w=350&h=180&bkg=white&c=" . urlencode(json_encode($chartAdopcionConfig));
     @endphp
 
     <!-- Encabezado -->
     <div class="header">
         <div>
             <h1>Dashboard de Citas</h1>
-            <p>Resumen general de servicios y rendimiento</p>
+            <p>Resumen general de servicios, rendimiento y adopción de la App</p>
         </div>
         <div class="text-right">
             <strong>Generado:</strong> {{ date('d/m/Y H:i') }}
@@ -274,6 +356,7 @@
         <div class="kpi-card">
             <div class="kpi-title">Total Citas</div>
             <div class="kpi-value">{{ $totalCitas }}</div>
+            <div class="kpi-subtitle">App: {{ $citasApp }} | Presencial: {{ $citasWalkIn }}</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-title">Servicios Totales</div>
@@ -286,6 +369,46 @@
         <div class="kpi-card">
             <div class="kpi-title">Ingresos Totales</div>
             <div class="kpi-value">${{ number_format($totalIngresos, 2) }}</div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE ANÁLISIS DE ADOPCIÓN (APP VS PRESENCIAL ID #1) -->
+    <div class="chart-section">
+        <div class="chart-container">
+            <img class="chart-img" src="{{ $chartAdopcionUrl }}" alt="Gráfico de Adopción de la App">
+        </div>
+        <div class="chart-details">
+            <div class="chart-title">Métrica de Aceptación de la App</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Origen / Tipo</th>
+                        <th class="text-center">Citas</th>
+                        <th class="text-center">% Adopción</th>
+                        <th class="text-right">Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-app">Usuarios App</span></td>
+                        <td class="text-center"><strong>{{ $citasApp }}</strong></td>
+                        <td class="text-center">{{ $pctApp }}%</td>
+                        <td class="text-right">${{ number_format($ingresosApp, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-walkin">Presencial (ID #1)</span></td>
+                        <td class="text-center"><strong>{{ $citasWalkIn }}</strong></td>
+                        <td class="text-center">{{ $pctWalkIn }}%</td>
+                        <td class="text-right">${{ number_format($ingresosWalkIn, 2) }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>TOTAL</strong></td>
+                        <td class="text-center"><strong>{{ $totalCitas }}</strong></td>
+                        <td class="text-center">100%</td>
+                        <td class="text-right"><strong>${{ number_format($totalIngresos, 2) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -325,7 +448,7 @@
                 <thead>
                     <tr>
                         <th>Empleado</th>
-                        <th class="text-center">Citas Realizadas</th>
+                        <th class="text-center">Citas</th>
                         <th class="text-right">Total Generado</th>
                     </tr>
                 </thead>
@@ -351,6 +474,9 @@
 
     @foreach($appointments as $cita)
         @php
+            $clientID = data_get($cita, 'clientID', data_get($cita, 'client.clientID'));
+            $isWalkIn = ($clientID == 1);
+
             $subtotalCita = 0;
             $duracionCita = 0;
             foreach ($cita->appointmentDetails as $detail) {
@@ -362,16 +488,21 @@
         <div class="appointment-card">
             <div class="appointment-header">
                 <span>CITA #{{ $cita->appointmentID }}</span>
-                <span class="badge badge-{{ $cita->status == 'pending' ? 'pending' : 'completed' }}">
-                    {{ $cita->status }}
-                </span>
+                <div>
+                    <span class="badge {{ $isWalkIn ? 'badge-walkin' : 'badge-app' }}">
+                        {{ $isWalkIn ? 'Presencial (ID #1)' : 'App User' }}
+                    </span>
+                    <span class="badge badge-{{ $cita->status == 'pending' ? 'pending' : 'completed' }}">
+                        {{ $cita->status }}
+                    </span>
+                </div>
             </div>
 
             <div class="appointment-body">
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Cliente:</label>
-                        <span>{{ $cita->client->email ?? 'N/A' }}</span>
+                        <span>{{ $cita->client->email ?? ($isWalkIn ? 'Cliente de Mostrador / ID #1' : 'N/A') }}</span>
                     </div>
                     <div class="info-item">
                         <label>Empleado / Silla:</label>

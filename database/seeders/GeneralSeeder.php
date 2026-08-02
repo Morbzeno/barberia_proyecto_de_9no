@@ -23,61 +23,101 @@ class GeneralSeeder extends Seeder
 
         $diasSemana = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-        DB::table('users')->insert([
-            'email' => Str::random(10).'@example.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        DB::table('persons')->insert([
-            'name' => Str::random(10),
-            'last_name' => Str::random(10),
-            'phone_number' => 333333333
-        ]);
-
-        DB::table('users')->insert([
-            'email' => Str::random(10).'@example.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        DB::table('persons')->insert([
-            'name' => Str::random(10),
-            'last_name' => Str::random(10),
-            'phone_number' => 333333333
-        ]);
-
-        DB::table('clients')->insert([
-            'userID' => 1,
-            'personID' => 1
-        ]);
-
-        for ($i = 0; $i < 5; $i++) {
-            
-             $randomSchedule = [
+            $randomSchedule = [
                  'days' => $faker->randomElements($diasSemana, rand(2, 4)),
                  'hours' => [
                      'start' => '09:00',
                     'end' => '18:00'
                  ]
             ];
-            
-            DB::table('employees')->insert([
-                'userID' => 2,
-                'personID' => 2,
-                'payment' => $faker->randomFloat(2, 10, 10000),
-                    
-                // Convertimos el array a JSON para guardarlo en la BD
-                    'schedule' => json_encode($randomSchedule),
 
-                'rfc' => Str::random(13),
-                    
-                // Selecciona aleatoriamente entre 'barber' o 'admin'
-                'admin_type' => $faker->randomElement(['barber', 'admin']),
-                    
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        DB::table('users')->insert([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'),
+        ]);
 
+        DB::table('persons')->insert([
+            'name' => 'administrador',
+            'last_name' => 'administrador',
+            'phone_number' => 333333333
+        ]);
+
+        DB::table('users')->insert([
+            'email' => 'worker@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        DB::table('persons')->insert([
+            'name' => 'trabajador',
+            'last_name' => 'trabajador',
+            'phone_number' => 333333333
+        ]);
+
+        DB::table('users')->insert([
+            'email' => 'recepcionista@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        DB::table('persons')->insert([
+            'name' => 'recepcionista',
+            'last_name' => 'recepcionista',
+            'phone_number' => 333333333
+        ]);
+
+        DB::table('users')->insert([
+            'email' => 'usuario@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        DB::table('persons')->insert([
+            'name' => 'usuario',
+            'last_name' => 'usuario',
+            'phone_number' => 333333333
+        ]);
+
+        //admin
+        DB::table('employees')->insert([
+            'userID' => 1,
+            'personID' => 1,
+            'payment' => $faker->randomFloat(2, 10, 10000),
+            'schedule' => json_encode($randomSchedule),
+            'rfc' => Str::random(13),
+            'workerType' => 'admin',
+                    
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        //worker
+        DB::table('employees')->insert([
+            'userID' => 2,
+            'personID' => 2,
+            'payment' => $faker->randomFloat(2, 10, 10000),
+            'schedule' => json_encode($randomSchedule),
+            'rfc' => Str::random(13),
+            'workerType' => 'barbero',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        //recepcionista
+        DB::table('employees')->insert([
+            'userID' => 3,
+            'personID' => 3,
+            'payment' => $faker->randomFloat(2, 10, 10000),
+            'schedule' => json_encode($randomSchedule),
+            'rfc' => Str::random(13),   
+            'workerType' => 'recepcionista',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        //usuario
+        DB::table('clients')->insert([
+            'userID' => 4,
+            'personID' => 4,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         // Insertar servicios
         DB::table('services')->insert([

@@ -34,13 +34,13 @@ use App\Http\Controllers\SellController;
 // });
 
 Route::post('/employees', [EmployeeController::class, 'store']);
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/employees', [EmployeeController::class, 'index']);
     Route::get('/employees/{id}', [EmployeeController::class, 'show']);
     
     Route::put('/employees/{id}', [EmployeeController::class, 'update']);
     Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
-});
+// });
 
 // Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/services', [ServiceController::class, 'index']);
@@ -120,8 +120,10 @@ Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
-Route::get('/invoke/{filter}/{date}', [AppointmentController::class, 'invoke']);
-Route::get('/pdf/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
+Route::middleware(['auth:sanctum', 'worker:admin'])->group(function () {
+    Route::get('/invoke/{filter}/{date}', [AppointmentController::class, 'invoke']);
+    Route::get('/pdf/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
+});
 
-route::get('/sells', [SellController::class, 'index']);
-route::post('/sells/{clientID}', [SellController::class, 'store']);
+    Route::get('/sells', [SellController::class, 'index']);
+    Route::post('/sells/{clientID}', [SellController::class, 'store']);

@@ -96,7 +96,7 @@ class EmployeeController extends Controller
                 'payment'    => $request->payment,
                 'rfc'        => $request->rfc,
                 'schedule'   => $request->schedule,
-                'admin_type' => $request->admin_type,
+                'workerType' => $request->workerType,
             ]);
 
             DB::commit();
@@ -157,7 +157,7 @@ class EmployeeController extends Controller
             ],
             'payment'      => 'sometimes|numeric|min:0|max:10000',
             'schedule'     => 'sometimes|array',
-            'admin_type'   => 'sometimes|in:barber,admin',
+            'workerType'   => 'sometimes|in:barbero,admin,recepcionista',
         ]);
 
         try {
@@ -177,7 +177,7 @@ class EmployeeController extends Controller
                 $employee->person->update($request->only(['name', 'last_name', 'phone_number']));
             }
 
-            $employee->update($request->only(['payment', 'schedule', 'admin_type', 'rfc']));
+            $employee->update($request->only(['payment', 'schedule', 'workerType', 'rfc']));
 
             DB::commit();
 

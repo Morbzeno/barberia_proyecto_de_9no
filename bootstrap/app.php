@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'client' => \App\Http\Middleware\EnsureClient::class,
+            'worker' => \App\Http\Middleware\EnsureWorker::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
 

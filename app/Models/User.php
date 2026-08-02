@@ -32,9 +32,26 @@ class User extends Authenticatable
         ];
     }
     public function employee(){
-        return $this->hasOne(Employee::class, 'personID', 'personID');
+        // hasOne(ModeloRelacionado, 'llave_foranea_en_employees', 'llave_primaria_en_users')
+        return $this->hasOne(Employee::class, 'userID', 'userID');
     }
     public function client(){
-        return $this->hasOne(Client::class, 'personID', 'personID');
+        return $this->hasOne(Client::class, 'userID', 'userID');
+    }
+
+    public function isClient(): bool{
+        return $this->client()->exists();
+    }
+
+    public function isEmployee(): bool{
+        return $this->employee()->exists();
+    }
+
+    public function hasWorkerRole(array $roles): bool{
+        if(!$this->isEmployee()){
+            return false;
+        }
+        $employee = $this->employee;
+        return in_array($employee->workerType, $roles);
     }
 }
