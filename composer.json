@@ -6,20 +6,6 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-<<<<<<< HEAD
-        "php": "^8.2",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
-    },
-    "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.50"
-=======
         "php": "^8.3",
         "laravel/framework": "^13.7",
         "laravel/sanctum": "^4.0",
@@ -35,7 +21,6 @@
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.7",
         "pestphp/pest-plugin-laravel": "^4.1"
->>>>>>> origin/luis_dev
     },
     "autoload": {
         "psr-4": {
@@ -55,11 +40,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-<<<<<<< HEAD
-            "npm install",
-=======
             "npm install --ignore-scripts",
->>>>>>> origin/luis_dev
             "npm run build"
         ],
         "dev": [
@@ -67,11 +48,7 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
-<<<<<<< HEAD
-            "@php artisan config:clear --ansi",
-=======
             "@php artisan config:clear --ansi @no_additional_args",
->>>>>>> origin/luis_dev
             "@php artisan test"
         ],
         "post-autoload-dump": [
