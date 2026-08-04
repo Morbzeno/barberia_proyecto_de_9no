@@ -425,6 +425,6 @@ class AppointmentController extends Controller
                 'message' => 'Filtro no válido. Use "day", "month" o "year".'
             ], 400);
         }
-        Pdf::view('pdf.invoice', ['appointments' => $appointments, 'filter' => $filter, 'date' => $date])->save('C:/Users/USER/OneDrive/Documents/invoice.pdf');
+        Pdf::view('pdf.invoice', ['appointments' => $appointments, 'filter' => $filter, 'date' => $date])->save('C:/Users/USER/OneDrive/Documents/invoice'. $filter . $date .'.pdf');
     }
 }

@@ -175,7 +175,7 @@ class GeneralSeeder extends Seeder
             'aproxDuration' => 50,
         ]);
 
-        // Lista de sillas con sus IDs de servicios a asociar
+
         $chairsData = [
             ['chairName' => 'silla 1', 'services' => [1, 2, 3]],
             ['chairName' => 'silla 2', 'services' => [1, 2, 3]],

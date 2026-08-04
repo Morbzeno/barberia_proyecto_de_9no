@@ -120,10 +120,10 @@ Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
-Route::middleware(['auth:sanctum', 'worker:admin'])->group(function () {
-    Route::get('/invoke/{filter}/{date}', [AppointmentController::class, 'invoke']);
-    Route::get('/pdf/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
-});
+// Route::middleware(['auth:sanctum', 'worker:admin'])->group(function () {
+    Route::get('/pdfAppointments/{filter}/{date}', [AppointmentController::class, 'invoke']);
+    Route::get('/pdfSells/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
+// });
 
     Route::get('/sells', [SellController::class, 'index']);
     Route::post('/sells/{clientID}', [SellController::class, 'store']);

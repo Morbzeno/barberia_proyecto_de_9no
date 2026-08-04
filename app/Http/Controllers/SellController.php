@@ -216,7 +216,7 @@ class SellController extends Controller
             ->get();
         }
 
-        Pdf::view('pdf.sells', ['sales' => $sells])->save('C:/Users/USER/OneDrive/Documents/pdf.pdf');
+        Pdf::view('pdf.sells', ['sales' => $sells])->save('C:/Users/USER/OneDrive/Documents/sells'. $filter . $date .'.pdf');
     }
 
 }
