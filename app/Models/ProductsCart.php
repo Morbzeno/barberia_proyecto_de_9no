@@ -19,7 +19,7 @@ class ProductsCart extends Model
     }
     public function producto()
     {
-        return $this->belongsTo(Product::class, 'productID', 'productID'); // Ajusta el campo si es necesario
+        return $this->belongsTo(Product::class, 'productID', 'productID'); 
     }
     public function sell()
     {

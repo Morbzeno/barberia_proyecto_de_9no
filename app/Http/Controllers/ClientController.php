@@ -59,6 +59,36 @@ class ClientController extends Controller
         return view('clients.show', compact('client'));
     }
 
+    public function profile(Request $request)
+    {
+        // Option A: Si tienes la relación definida en el modelo User ($user->client)
+        // $client = $request->user()->client;
+
+        // Option B: Si buscas directamente por la clave foránea (ej. user_id o el ID del usuario)
+        $client = Client::where('userID', $request->user()->userID)
+        ->first();
+
+        if (!$client) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'No se encontró el perfil de cliente asociado a este usuario.'
+                ], 404);
+            }
+
+            return redirect()->back()->with('error', 'Perfil no encontrado.');
+        }
+
+        // Respuesta Híbrida
+        if (request()->wantsJson()) {
+            return response()->json([
+                'message' => 'Perfil obtenido correctamente.',
+                'data'    => $client->load(['user', 'person'])
+            ], 200);
+        }
+
+        return view('clients.profile', compact('client'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([

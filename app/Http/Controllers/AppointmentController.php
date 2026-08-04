@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\AppointmentDetail;
 use App\Models\Service;
+use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -52,6 +53,34 @@ class AppointmentController extends Controller
             return redirect()->route('appointments.index')->with('error', 'Cita no encontrada');
         }
         return view('appointments.show', compact('appointment'));
+    }
+
+    public function showClient(Request $request){
+
+        $client = Client::where('userID', $request->user()->userID)
+        ->first();
+
+        $appointment = Appointment::with('client', 'appointmentDetails.service')
+        ->where('clientID', $client->clientID)->where('status', '!=', 'Finished')
+        ->first();
+        
+        if (request()->wantsJson() ){
+            if (!$appointment){
+                return response()->json([
+                    'message' => 'cita no encontrada'
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'aqui esta la cita',
+                'data' => $appointment
+            ], 200);
+        }
+
+        if (!$appointment){
+            return redirect()->route('appointments.index')->with('error', 'Cita no encontrada');
+        }
+        return view('appointments.showClient', compact('appointment'));
     }
 
     public function showDay($chairID, $date){
@@ -365,6 +394,15 @@ class AppointmentController extends Controller
     public function AlterAppointmentStatus($id, $newStatus){
         $appointment = Appointment::find($id);
 
+        if ($newStatus !== 'pending' && $newStatus !== 'in_process' && $newStatus !== 'cancelled' && $newStatus !== 'Finished') {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Estatus no válido. Use "pending", "in_process", "cancelled" o "Finished".'
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Estatus no válido. Use "pending", "in_process", "cancelled" o "Finished".');
+        }
+
         if (!$appointment){
             if (request()->wantsJson()) {
                 return response()->json([
@@ -409,13 +447,13 @@ class AppointmentController extends Controller
             $appointments = Appointment::whereDate('startHour', $date)->with('client', 'appointmentDetails.service')
             ->get();
         }
-        else if ($filter === 'month') {
+        elseif ($filter === 'month') {
             $appointments = Appointment::whereMonth('startHour', Carbon::parse($date)->month)
             ->whereYear('startHour', Carbon::parse($date)->year)
             ->with('client', 'appointmentDetails.service')
             ->get();
         }
-        else if ($filter === 'year') {
+        elseif ($filter === 'year') {
             $appointments = Appointment::whereYear('startHour', Carbon::parse($date)->year)
             ->with('client', 'appointmentDetails.service')
             ->get();
