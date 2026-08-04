@@ -54,7 +54,7 @@ class EmployeeController extends Controller
             //employee
             'payment' => 'required|decimal:2|max:10000.00',
             'schedule' => 'required|array',
-            'admin_type' => 'required|in:barber,admin',
+            'admin_type' => 'required|in:barber,admin,receptionist',
 
         ]);
 
@@ -122,8 +122,8 @@ class EmployeeController extends Controller
         'phone_number' => 'sometimes|string|max:10',
         //employee
         'payment' => 'sometimes|max:10000.00',
-        'schedule' => 'sometimes|date',
-        'admin_type' => 'sometimes|in:barber,admin',
+        'schedule' => 'sometimes|array',
+        'admin_type' => 'sometimes|in:barber,admin,receptionist',
     ]);
 
     try {

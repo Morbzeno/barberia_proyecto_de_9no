@@ -12,10 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        ]);
+
+        // Permite que las rutas API reconozcan
+        // la sesión iniciada desde el frontend Blade
+        $middleware->statefulApi();
 
         $middleware->alias([
             'client' => \App\Http\Middleware\EnsureClient::class,

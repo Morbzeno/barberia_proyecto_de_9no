@@ -56,13 +56,14 @@
                class="w-full border border-black/15 rounded-lg px-3 py-2 text-sm" required>
     </div>
 
-    <div class="sm:col-span-2">
-        <label class="block text-sm font-medium mb-1">Rol</label>
-        <select name="admin_type" class="w-full sm:w-64 border border-black/15 rounded-lg px-3 py-2 text-sm" required>
-            <option value="barber" @selected(old('admin_type', $employee->admin_type ?? 'barber') === 'barber')>Barbero</option>
-            <option value="admin" @selected(old('admin_type', $employee->admin_type ?? '') === 'admin')>Administrador</option>
-        </select>
-    </div>
+  <div class="sm:col-span-2">
+    <label class="block text-sm font-medium mb-1">Rol</label>
+    <select name="admin_type" class="w-full sm:w-64 border border-black/15 rounded-lg px-3 py-2 text-sm" required>
+        <option value="barber" @selected(old('admin_type', $employee->admin_type ?? 'barber') === 'barber')>Barbero</option>
+        <option value="receptionist" @selected(old('admin_type', $employee->admin_type ?? '') === 'receptionist')>Recepcionista</option>
+        <option value="admin" @selected(old('admin_type', $employee->admin_type ?? '') === 'admin')>Administrador</option>
+    </select>
+</div>
 </div>
 
 <div>

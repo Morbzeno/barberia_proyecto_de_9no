@@ -5,6 +5,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ClientController;
 
 // Landing Page Principal
 Route::get('/', function () {
@@ -27,6 +28,9 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::get('/registro', function () {
     return view('auth.register');
 })->name('register');
+
+Route::post('/registro', [ClientController::class, 'store'])
+    ->name('register.store');
 
 // Citas
 Route::get('/citas/{chairID}/{date}', [AppointmentController::class, 'showDay'])

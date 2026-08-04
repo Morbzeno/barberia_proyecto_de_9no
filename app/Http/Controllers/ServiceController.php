@@ -84,7 +84,7 @@ class ServiceController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string|max:255',
-            'price' => 'sometimes|',
+            'price' => 'sometimes|numeric',
             'aproxDuration' => 'sometimes|Integer|',
         ]);
 
@@ -95,7 +95,7 @@ class ServiceController extends Controller
 
                 return response()->json([
                     'message' => 'service actualizado correctamente',
-                    'data' => $service->fresh(['user', 'person'])
+                    'data' => $service->fresh()
                 ], 200);
             });
 

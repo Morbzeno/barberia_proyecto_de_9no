@@ -36,8 +36,14 @@
                     <td class="px-5 py-3">{{ $employee->person?->phone_number }}</td>
                     <td class="px-5 py-3">
                         <span class="px-2 py-0.5 rounded-full text-xs {{ $employee->admin_type === 'admin' ? 'bg-[#d9a862]/20 text-[#8a5f1f]' : 'bg-black/5 text-[#6b5c46]' }}">
-                            {{ $employee->admin_type === 'admin' ? 'Administrador' : 'Barbero' }}
-                        </span>
+    @if($employee->admin_type === 'admin')
+        Administrador
+    @elseif($employee->admin_type === 'receptionist')
+        Recepcionista
+    @else
+        Barbero
+    @endif
+</span>
                     </td>
                     <td class="px-5 py-3">${{ number_format($employee->payment, 2) }}</td>
                     <td class="px-5 py-3">

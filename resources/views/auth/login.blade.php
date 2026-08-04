@@ -131,6 +131,16 @@
         text-align: center;
         font-size: 14px;
     }
+
+    .success-message {
+    margin-bottom: 20px;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(0, 180, 80, 0.18);
+    color: #b7ffd1;
+    text-align: center;
+    font-size: 14px;
+}
 </style>
 @endsection
 
@@ -146,6 +156,18 @@
     <div class="subtitle">
         Iniciar Sesión
     </div>
+
+    @if (session('success'))
+    <div class="success-message">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if ($errors->any())
+    <div class="error-message">
+        {{ $errors->first() }}
+    </div>
+@endif
 
     {{-- Mostrar errores de autenticación --}}
     @if ($errors->any())

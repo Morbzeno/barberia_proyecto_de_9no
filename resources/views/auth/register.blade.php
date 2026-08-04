@@ -128,31 +128,86 @@
     <div class="logo">Machin Barber</div>
     <div class="subtitle">Crear Cuenta</div>
 
-    <form action="#" method="POST">
-        @csrf {{-- Token de seguridad indispensable en Laravel --}}
-        
-        <div class="input-box">
-            <label>Nombre</label>
-            <input type="text" name="name" placeholder="Ingresa tu nombre" required>
-        </div>
+    <form action="{{ route('register.store') }}" method="POST">
+    @csrf
 
-        <div class="input-box">
-            <label>Apellido</label>
-            <input type="text" name="lastname" placeholder="Ingresa tu apellido" required>
-        </div>
+    <div class="input-box">
+        <label for="name">Nombre</label>
+        <input
+            id="name"
+            type="text"
+            name="name"
+            value="{{ old('name') }}"
+            placeholder="Ingresa tu nombre"
+            required
+        >
+    </div>
 
-        <div class="input-box">
-            <label>Correo Electrónico</label>
-            <input type="email" name="email" placeholder="Ingresa tu correo" required>
-        </div>
+    <div class="input-box">
+        <label for="last_name">Apellido</label>
+        <input
+            id="last_name"
+            type="text"
+            name="last_name"
+            value="{{ old('last_name') }}"
+            placeholder="Ingresa tu apellido"
+            required
+        >
+    </div>
 
-        <div class="input-box">
-            <label>Número de Teléfono</label>
-            <input type="tel" name="phone" placeholder="Ingresa tu número" required>
-        </div>
+    <div class="input-box">
+        <label for="email">Correo Electrónico</label>
+        <input
+            id="email"
+            type="email"
+            name="email"
+            value="{{ old('email') }}"
+            placeholder="Ingresa tu correo"
+            required
+        >
+    </div>
 
-        <button type="submit" class="btn-register">Crear Cuenta</button>
-    </form>
+    <div class="input-box">
+        <label for="phone_number">Número de Teléfono</label>
+        <input
+            id="phone_number"
+            type="tel"
+            name="phone_number"
+            value="{{ old('phone_number') }}"
+            placeholder="Ingresa tu número"
+            maxlength="10"
+            required
+        >
+    </div>
+
+    <div class="input-box">
+        <label for="password">Contraseña</label>
+        <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="new-password"
+            required
+        >
+    </div>
+
+    <div class="input-box">
+        <label for="password_confirmation">Confirmar Contraseña</label>
+        <input
+            id="password_confirmation"
+            type="password"
+            name="password_confirmation"
+            placeholder="Confirma tu contraseña"
+            autocomplete="new-password"
+            required
+        >
+    </div>
+
+    <button type="submit" class="btn-register">
+        Crear Cuenta
+    </button>
+</form>
 
     <div class="login-link">
         ¿Ya tienes cuenta?

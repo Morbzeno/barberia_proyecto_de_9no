@@ -17,7 +17,6 @@ class User extends Authenticatable
 
     /** @use HasFactory<UserFactory> */
     protected $fillable = [
-        'name',
         'email',
         'password',
     ];
@@ -63,6 +62,6 @@ class User extends Authenticatable
 
         $employee = $this->employee;
 
-        return in_array($employee->workerType, $roles);
+        return in_array($employee->admin_Type, $roles);
     }
 }
