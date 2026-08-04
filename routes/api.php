@@ -44,6 +44,9 @@ Route::get('/chairs/{id}', [ChairController::class, 'show']);
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/profile', [ClientController::class, 'profile']);
+    Route::put('/profile', [ClientController::class, 'updateProfile']);
+
 
     // Autenticación y Verificación
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
@@ -58,9 +61,6 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('client')->group(function () {
-        Route::get('/profile', [ClientController::class, 'profile']);
-        Route::put('/profile', [ClientController::class, 'updateProfile']);
-
         Route::get('/showClient', [AppointmentController::class, 'showClient']);
 
         Route::get('/cart/{id}', [CartController::class, 'show']);
@@ -122,5 +122,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pdfAppointments/{filter}/{date}', [AppointmentController::class, 'invoke']);
         Route::get('/pdfSells/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
     });
-
 });

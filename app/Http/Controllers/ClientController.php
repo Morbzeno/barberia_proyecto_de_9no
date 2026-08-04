@@ -8,6 +8,7 @@ use App\Models\Person;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\Employee;
 
 class ClientController extends Controller
 {
@@ -65,28 +66,33 @@ class ClientController extends Controller
         // $client = $request->user()->client;
 
         // Option B: Si buscas directamente por la clave foránea (ej. user_id o el ID del usuario)
-        $client = Client::where('userID', $request->user()->userID)
+        $user = Client::where('userID', $request->user()->userID)
         ->first();
 
-        if (!$client) {
-            if (request()->wantsJson()) {
-                return response()->json([
-                    'message' => 'No se encontró el perfil de cliente asociado a este usuario.'
-                ], 404);
-            }
+        if (!$user) {
+            $user = Employee::where('userID', $request->user()->userID)
+            ->first();
 
-            return redirect()->back()->with('error', 'Perfil no encontrado.');
+            if (!$user) {
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'message' => 'No se encontró el perfil de cliente asociado a este usuario.'
+                    ], 404);
+                }
+
+                return redirect()->back()->with('error', 'Perfil no encontrado.');
+            }
         }
 
         // Respuesta Híbrida
         if (request()->wantsJson()) {
             return response()->json([
                 'message' => 'Perfil obtenido correctamente.',
-                'data'    => $client->load(['user', 'person'])
+                'data'    => $user->load(['user', 'person'])
             ], 200);
         }
 
-        return view('clients.profile', compact('client'));
+        return view('clients.profile', compact('user'));
     }
 
     public function store(Request $request)
