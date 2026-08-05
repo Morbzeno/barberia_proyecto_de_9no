@@ -24,7 +24,7 @@ class CartController extends Controller
             return back()->with('error', 'El campo clientID es obligatorio.');
         }
 
-        $cart = Cart::with(['client', 'producto_cart' => function ($query) {
+        $cart = Cart::with(['client', 'productsCart' => function ($query) {
             $query->where('state', 'waiting')->with('producto');
         }])->where('clientID', $id)->get();
 
@@ -112,7 +112,7 @@ class CartController extends Controller
             $cart->total = $total;
             $cart->save();
 
-            $cart->load(['client', 'producto_cart']);
+            $cart->load(['client', 'productsCart']);
 
             if (request()->wantsJson()) {
                 return response()->json([
@@ -388,7 +388,7 @@ class CartController extends Controller
 
     public function createPaypalOrder(Request $request){
         $clientID = $request->input('clientID');
-        $cart = Cart::with(['producto_cart' => function ($query) {
+        $cart = Cart::with(['productsCart' => function ($query) {
             $query->where('state', 'waiting')->with('producto');
         }])->where('clientID', $clientID)->first();
 
