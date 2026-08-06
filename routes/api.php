@@ -2,16 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-// Controladores de Autenticación
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\VerifyEmailController;
-
-// Controladores de Dominio
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServiceController;
@@ -26,8 +16,8 @@ use App\Http\Controllers\ProductController;
 //     return $request->user();
 // });
 
-
-// Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/profile', [UserController::class, 'profile']);
     Route::get('/clients', [ClientController::class, 'index']);
     Route::get('/clients/{id}', [ClientController::class, 'show']);
     Route::post('/clients', [ClientController::class, 'store']);
@@ -52,33 +42,30 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 });
 
-Route::get('/services', [ServiceController::class, 'index']);
-Route::get('/services/{id}', [ServiceController::class, 'show']);
-
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/services', [ServiceController::class, 'index']);
+    Route::get('/services/{id}', [ServiceController::class, 'show']);
     Route::post('/services', [ServiceController::class, 'store']);
     Route::put('/services/{id}', [ServiceController::class, 'update']);
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
-});
+// });
 
-Route::get('/appointments/availability', [AppointmentController::class, 'availability']);
-
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']);
     Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
+    Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
     Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
-});
+// });
 
-Route::get('/chairs', [ChairController::class, 'index']);
-Route::get('/chairs/{id}', [ChairController::class, 'show']);
-
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/chairs', [ChairController::class, 'index']);
+    Route::get('/chairs/{id}', [ChairController::class, 'show']);
     Route::post('/chairs', [ChairController::class, 'store']);
     Route::put('/chairs/{id}', [ChairController::class, 'update']);
     Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
-});
+// });
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -89,11 +76,11 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware('guest')
-    ->name('api.register');
+    ->name('register');
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
     ->middleware('guest')
-    ->name('api.login');
+    ->name('login');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
     ->middleware('guest')
@@ -115,11 +102,11 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::get('/cart', [CartController::class, 'index']);
-Route::post('/cart', [CartController::class, 'add']);
-Route::post('/cart/{id}', [CartController::class, 'more']);
-Route::get('/cart/{id}', [CartController::class, 'show']);
-Route::put('/cart/{id}', [CartController::class, 'update']);
+    Route::get('/cart/{id}', [CartController::class, 'show']);
+Route::post('/addCart/{product}/{client}', [CartController::class, 'add']);
+Route::delete('/quitCart/{product}/{client}', [CartController::class, 'quitItem']);
+Route::put('/moreCart/{product}/{client}', [CartController::class, 'more']);
+Route::put('/lessCart/{product}/{client}', [CartController::class, 'less']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
