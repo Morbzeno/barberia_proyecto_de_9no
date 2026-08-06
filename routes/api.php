@@ -30,37 +30,44 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
 
+// ===================== RUTAS PÚBLICAS =====================
+
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{id}', [ServiceController::class, 'show']);
+
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
+
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
+
 Route::get('/chairs', [ChairController::class, 'index']);
 Route::get('/chairs/{id}', [ChairController::class, 'show']);
 
+Route::get('/barbers', [EmployeeController::class, 'barbers']);
 
-/*
-|--------------------------------------------------------------------------
-*/
+// ==========================================================
+
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::get('/profile', [ClientController::class, 'profile']);
     Route::put('/profile', [ClientController::class, 'updateProfile']);
 
-
     // Autenticación y Verificación
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
     Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
+
     Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
 
-    /*
-    |--------------------------------------------------------------------------
-    */
+    // ---------------- CLIENTE ----------------
+
     Route::middleware('client')->group(function () {
+
         Route::get('/showClient', [AppointmentController::class, 'showClient']);
 
         Route::get('/cart/{id}', [CartController::class, 'show']);
@@ -68,24 +75,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/quitCart/{product}/{client}', [CartController::class, 'quitItem']);
         Route::put('/moreCart/{product}/{client}', [CartController::class, 'more']);
         Route::put('/lessCart/{product}/{client}', [CartController::class, 'less']);
-        
+
         Route::post('/sells/{clientID}', [SellController::class, 'store']);
     });
 
+    // ---------------- BARBERO / RECEPCIONISTA / ADMIN ----------------
 
-    // ------------------------------------------------------------------------
     Route::middleware('worker:barbero,recepcionista,admin')->group(function () {
+
         Route::get('/appointments', [AppointmentController::class, 'index']);
         Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
         Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
         Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
+
     });
 
-    // ------------------------------------------------------------------------
+    // ---------------- RECEPCIONISTA / ADMIN ----------------
+
     Route::middleware('worker:recepcionista,admin')->group(function () {
+
         Route::post('/appointments', [AppointmentController::class, 'store']);
         Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
-        
+
         Route::put('/appointments/{id}/status/{newStatus}', [AppointmentController::class, 'AlterAppointmentStatus']);
 
         Route::get('/clients', [ClientController::class, 'index']);
@@ -95,10 +106,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/sells', [SellController::class, 'index']);
         Route::post('/sells/{clientID}', [SellController::class, 'store']);
+
     });
 
-    // ------------------------------------------------------------------------
+    // ---------------- ADMIN ----------------
+
     Route::middleware('worker:admin')->group(function () {
+
         Route::apiResource('employees', EmployeeController::class);
 
         Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
@@ -122,4 +136,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pdfAppointments/{filter}/{date}', [AppointmentController::class, 'invoke']);
         Route::get('/pdfSells/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
     });
+
 });

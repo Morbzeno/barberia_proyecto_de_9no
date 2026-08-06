@@ -4,49 +4,143 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Person;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Handle an incoming authentication request.
+     * Iniciar sesión desde la API.
      */
-
-    public function store(LoginRequest $request)
+    public function store(LoginRequest $request): JsonResponse
     {
         $request->validate([
-            'email' => 'email|required|exists:users',
-            'password' => 'required',
+            'email' => [
+                'required',
+                'email',
+                'exists:users,email',
+            ],
+            'password' => [
+                'required',
+                'string',
+            ],
         ]);
-        $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return [
-                'message' => 'The provided credentials are incorrect'
-            ];
+        $user = User::with([
+            'employee',
+            'client',
+        ])
+            ->where('email', $request->email)
+            ->first();
+
+        if (
+            !$user ||
+            !Hash::check($request->password, $user->password)
+        ) {
+            return response()->json([
+                'message' => 'Las credenciales proporcionadas son incorrectas.',
+            ], 401);
         }
-        $token = $user->createToken('barberia-api-token');
-        return [
-            "user" => $user,
-            "token" => $token->plainTextToken
-        ];
+
+        $role = null;
+        $adminType = null;
+        $clientId = null;
+        $employeeId = null;
+        $personId = null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Determinar el tipo de usuario
+        |--------------------------------------------------------------------------
+        */
+
+       if ($user->employee) {
+    $role = 'employee';
+    $adminType = $user->employee->admin_type;
+    $employeeId = $user->employee->employeeID;
+    $personId = $user->employee->personID;
+} elseif ($user->client) {
+    $role = 'client';
+    $clientId = $user->client->clientID;
+    $personId = $user->client->personID;
+}
+
+        if ($role === null) {
+            return response()->json([
+                'message' => 'El usuario no tiene un perfil asociado.',
+            ], 403);
+        }
+
+        $person = $personId !== null
+            ? Person::find($personId)
+            : null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Crear token Sanctum
+        |--------------------------------------------------------------------------
+        */
+
+        $token = $user->createToken(
+            'barberia-api-token'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Construir respuesta
+        |--------------------------------------------------------------------------
+        */
+
+        $userData = array_merge(
+            $user->toArray(),
+            [
+                'name' => $person ? $person->name : null,
+                'last_name' => $person ? $person->last_name : null,
+                'phone_number' => $person ? $person->phone_number : null,
+                'role' => $role,
+                'admin_type' => $adminType,
+                'clientID' => $clientId,
+                'employeeID' => $employeeId,
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Inicio de sesión correcto.',
+            'user' => $userData,
+            'token' => $token->plainTextToken,
+            'access_token' => $token->plainTextToken,
+            'token_type' => 'Bearer',
+        ], 200);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Cerrar sesión.
      */
     public function destroy(Request $request): Response
     {
-        Auth::guard('web')->logout();
+       $user = $request->user();
 
-        $request->session()->invalidate();
+            if ($user) {
+    $token = $user->currentAccessToken();
 
-        $request->session()->regenerateToken();
+            if ($token) {
+        $token->delete();
+    }
+}
+
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+        }
 
         return response()->noContent();
     }

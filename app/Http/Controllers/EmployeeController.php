@@ -255,4 +255,17 @@ class EmployeeController extends Controller
             return redirect()->back()->with('error', 'Error al eliminar el empleado: ' . $e->getMessage());
         }
     }
+    public function barbers()
+{
+    $barbers = Employee::with('person')
+        ->where('admin_type', 'barber')
+        ->get();
+
+    return response()->json([
+        'message' => $barbers->isEmpty()
+            ? 'No se encontraron barberos.'
+            : 'Barberos obtenidos correctamente.',
+        'data' => $barbers
+    ], 200);
+}
 }
