@@ -9,7 +9,7 @@ class Employee extends Model
 {
     use SoftDeletes;
     protected $primaryKey = 'employeeID';
-    protected $fillable = ['userID', 'personID', 'payment', 'schedule', 'workerType', 'rfc'];
+    protected $fillable = ['userID', 'personID', 'payment', 'schedule', 'admin_type', 'rfc'];
 
     public function user(){
         return $this->belongsTo(User::class, 'userID', 'userID');
