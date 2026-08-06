@@ -47,11 +47,18 @@ class User extends Authenticatable
         return $this->employee()->exists();
     }
 
-    public function hasWorkerRole(array $roles): bool{
-        if(!$this->isEmployee()){
-            return false;
-        }
-        $employee = $this->employee;
-        return in_array($employee->workerType, $roles);
+   public function hasWorkerRole(array $roles): bool
+{
+    if (!$this->isEmployee()) {
+        return false;
     }
+
+    $employee = $this->employee;
+
+    return in_array(
+        $employee->admin_type,
+        $roles,
+        true
+    );
+}
 }
