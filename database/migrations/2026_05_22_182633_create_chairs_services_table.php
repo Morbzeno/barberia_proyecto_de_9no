@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('appointment_details', function (Blueprint $table) {
-            $table->id('appointmentDetailID');
-            $table->foreignId('appointmentID');
+        Schema::create('chairs_services', function (Blueprint $table) {
+            $table->id('chairServiceID');
+            $table->foreignId('chairID');
             $table->foreignId('serviceID');
-            $table->decimal('totalPrice', 8, 2);
+            $table->foreign('chairID')->references('chairID')->on('chairs')->onDelete('cascade');
+            $table->foreign('serviceID')->references('serviceID')->on('services')->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('appointment_details');
+        Schema::dropIfExists('chairs_services');
     }
 };

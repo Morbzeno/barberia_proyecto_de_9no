@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clients', function (Blueprint $table) {
-            $table->id('clientID');
-            $table->foreignId('userID');
-            $table->foreignId('personID');
+        Schema::create('payments', function (Blueprint $table) {
+            $table->id('paymentID');
+            $table->foreignId('appointmentID');
+            $table->decimal('subtotal', 8, 2);
+            $table->text('paymentMethod');
             $table->softDeletes();
+            $table->foreign('appointmentID')->references('appointmentID')->on('appointments')->onDelete('cascade');
             $table->timestamps();
-            $table->foreign('userID')->references('userID')->on('users')->onDelete('cascade');
-            $table->foreign('personID')->references('personID')->on('persons')->onDelete('cascade');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clients');
+        Schema::dropIfExists('payments');
     }
 };

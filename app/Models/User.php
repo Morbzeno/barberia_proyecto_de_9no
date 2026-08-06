@@ -10,15 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    use SoftDeletes;
+     use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
     protected $primaryKey = 'userID';
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -31,5 +31,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    public function employee(){
+        return $this->hasOne(Employee::class, 'personID', 'personID');
+    }
+    public function client(){
+        return $this->hasOne(Client::class, 'personID', 'personID');
     }
 }
