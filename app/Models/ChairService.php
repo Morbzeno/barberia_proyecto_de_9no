@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ChairService extends Model
 {
-    protected $table = 'chairs_services';
+    protected $table = 'chair_service';
     protected $primaryKey = 'chairServiceID';
     protected $fillable = ['chairID', 'serviceID'];
 

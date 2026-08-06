@@ -8,115 +8,196 @@ use Illuminate\Support\Facades\DB;
 
 class ServiceController extends Controller
 {
-    public function index(){
-        $service = Service::paginate(10);
-        if($service->isEmpty()){
+    public function index()
+    {
+        $services = Service::paginate(10);
+
+        if (request()->wantsJson()) {
+            if ($services->isEmpty()) {
+                return response()->json([
+                    'message' => 'No se encontraron servicios.'
+                ], 404);
+            }
+
             return response()->json([
-                'message' => 'no se encontraron services',
-                ],400);
+                'message' => 'Servicios obtenidos exitosamente.',
+                'data'    => $services
+            ], 200);
         }
 
-        return response()->json([
-            'message' => 'Todos los services aquí',
-            'data' => $service
-        ],200);
+        if ($services->isEmpty()) {
+            return redirect()->back()->with('error', 'No se encontraron servicios.');
+        }
+
+        return view('services.index', compact('services'));
     }
-    
-    public function show($id){
+
+    public function show($id)
+    {
         $service = Service::find($id);
 
-        if (!$service){
+        if (request()->wantsJson()) {
+            if (!$service) {
+                return response()->json([
+                    'message' => 'Servicio no encontrado.'
+                ], 404);
+            }
+
             return response()->json([
-                'message' => 'service no encontrado',
-                ],400);
+                'message' => 'Servicio obtenido exitosamente.',
+                'data'    => $service
+            ], 200);
         }
 
-        return response()->json([
-            'message' => 'datos del service',
-            'data' => $service
-        ],200);
+        if (!$service) {
+            return redirect()->back()->with('error', 'Servicio no encontrado.');
+        }
+
+        return view('services.show', compact('service'));
     }
 
-    public function store(Request $request) {
-        // 1. Validación corregida (sin barras sueltas y coincidiendo con Postman)
+    public function store(Request $request)
+    {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'descripcion' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'aproxDuration' => 'required|integer',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string|max:255',
+            'descripcion'   => 'nullable|string|max:255',
+            'price'         => 'required|numeric|min:0',
+            'aproxDuration' => 'required|integer|min:1',
         ]);
 
         try {
-            // 2. Ejecutamos la transacción de forma segura
-            $service = DB::transaction(function () use ($request) {
-                return Service::create([
-                    'name' => $request->name,
-                    'description' => $request->descripcion, // Mapea tu JSON en español a la columna de la BD
-                    'price' => $request->price,
-                    'aproxDuration' => $request->aproxDuration
-                ]);
-            });
+            DB::beginTransaction();
 
-            // 3. Retornamos la respuesta FUERA de la transacción una vez que todo salió bien
-            return response()->json([
-                'message' => 'Servicio creado correctamente',
-                'data' => $service
-            ], 201); // 201 es el código HTTP correcto para "Creado con éxito"
+            $description = $request->description ?? $request->descripcion;
+
+            $service = Service::create([
+                'name'          => $request->name,
+                'description'   => $description,
+                'price'         => $request->price,
+                'aproxDuration' => $request->aproxDuration,
+            ]);
+
+            DB::commit();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Servicio creado correctamente.',
+                    'data'    => $service
+                ], 201);
+            }
+
+            return redirect()->back()->with('success', 'Servicio creado correctamente.');
 
         } catch (\Exception $e) {
-            // 4. Captura limpia del error sin exponer datos sensibles del servidor
-            return response()->json([
-                'message' => 'Hubo un error al crear el servicio',
-                'error' => $e->getMessage() 
-            ], 500);
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al crear el servicio: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Error al crear el servicio: ' . $e->getMessage());
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $service = Service::find($id);
 
         if (!$service) {
-            return response()->json([
-                'message' => 'service no encontrado'
-            ], 404);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Servicio no encontrado.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Servicio no encontrado.');
         }
 
         $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string|max:255',
-            'price' => 'sometimes|',
-            'aproxDuration' => 'sometimes|Integer|',
+            'name'          => 'sometimes|string|max:255',
+            'description'   => 'sometimes|string|max:255',
+            'descripcion'   => 'sometimes|string|max:255',
+            'price'         => 'sometimes|numeric|min:0',
+            'aproxDuration' => 'sometimes|integer|min:1',
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $service) {
+            DB::beginTransaction();
 
-                $service->update($request->only(['name', 'description', 'price', 'aproxDuration']));
+            $updateData = $request->only(['name', 'price', 'aproxDuration']);
 
+            if ($request->has('description')) {
+                $updateData['description'] = $request->description;
+            } elseif ($request->has('descripcion')) {
+                $updateData['description'] = $request->descripcion;
+            }
+
+            $service->update($updateData);
+
+            DB::commit();
+
+            if (request()->wantsJson()) {
                 return response()->json([
-                    'message' => 'service actualizado correctamente',
-                    'data' => $service->fresh(['user', 'person'])
+                    'message' => 'Servicio actualizado correctamente.',
+                    'data'    => $service->fresh()
                 ], 200);
-            });
+            }
 
-            } catch (\Exception $e) {
-                return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()],500);
+            return redirect()->back()->with('success', 'Servicio actualizado correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al actualizar el servicio: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar el servicio: ' . $e->getMessage());
         }
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $service = Service::find($id);
 
-        if(!$service){
-            return response()->json([
-                'message' => 'service no encontrado'
-            ], 404);
+        if (!$service) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Servicio no encontrado.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Servicio no encontrado.');
         }
-        
-        $service->delete();
 
-        return response()->json([
-            'message' => 'service eliminado correctamente'
-        ], 200);
+        try {
+            DB::beginTransaction();
+
+            $service->delete();
+
+            DB::commit();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Servicio eliminado correctamente.'
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Servicio eliminado correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al eliminar el servicio: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error al eliminar el servicio: ' . $e->getMessage());
+        }
     }
 }

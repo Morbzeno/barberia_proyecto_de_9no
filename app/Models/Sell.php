@@ -19,15 +19,15 @@ class Sell extends Model
     }
     public function client()
     {
-        return $this->belongsTo(User::class, 'clientID', 'clientid');
+        return $this->belongsTo(Client::class, 'clientID', 'clientID');
     }
     public function direction()
     {
         return $this->belongsTo(Direction::class, 'directionID', 'directionID');
     }
-    public function product_cart()
+    public function productsCart()
     {
-        return $this->hasMany(product_cart::class, 'productCartID', 'productCartID');
+        return $this->hasMany(ProductsCart::class, 'productCartID', 'productCartID');
     }
 
 

@@ -3,166 +3,256 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Employee;
 use App\Models\Person;
 use App\Models\User;
-use App\Models\Employee;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
-    public function index(){
-        $employees = Employee::with(['user','person'])->paginate(10);
-        if($employees->isEmpty()){
+    public function index()
+    {
+        $employees = Employee::with(['user', 'person'])->paginate(10);
+
+        if (request()->wantsJson()) {
+            if ($employees->isEmpty()) {
+                return response()->json([
+                    'message' => 'No se encontraron empleados.'
+                ], 404);
+            }
+
             return response()->json([
-                'message' => 'no se encontraron Employees',
-                ],400);
+                'message' => 'Todos los empleados aquí',
+                'data'    => $employees
+            ], 200);
         }
 
-        return response()->json([
-            'message' => 'Todos los Employees aquí',
-            'data' => $employees
-        ],200);
-    }
-
-    public function show($id){
-        $employee = Employee::with(['user', 'person',])->find($id);
-
-        if (!$employee){
-            return response()->json([
-                'message' => 'Employee no encontrado',
-                ],400);
+        if ($employees->isEmpty()) {
+            return redirect()->back()->with('error', 'No se encontraron empleados.');
         }
 
-        return response()->json([
-            'message' => 'datos del Employee',
-            'data' => $employee
-        ],200);
-        
+        return view('employees.index', compact('employees'));
     }
 
-    public function store(Request $request){
+    public function show($id)
+    {
+        $employee = Employee::with(['user', 'person'])->find($id);
+
+        if (request()->wantsJson()) {
+            if (!$employee) {
+                return response()->json([
+                    'message' => 'Empleado no encontrado.'
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Datos del empleado',
+                'data'    => $employee
+            ], 200);
+        }
+
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Empleado no encontrado.');
+        }
+
+        return view('employees.show', compact('employee'));
+    }
+
+    public function store(Request $request)
+    {
         $request->validate([
             // user
-            'email' => 'required|string|email|unique:users,email|max:255',
-            'password' => 'required|string|min:8|confirmed|max:255',
+            'email'        => 'required|string|email|unique:users,email|max:255',
+            'password'     => 'required|string|min:8|confirmed|max:255',
             // person
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'rfc' => 'required|string|unique:employees,rfc|max:13',
+            'name'         => 'required|string|max:255',
+            'last_name'    => 'required|string|max:255',
             'phone_number' => 'required|string|max:10',
-            //employee
-            'payment' => 'required|decimal:2|max:10000.00',
-            'schedule' => 'required|array',
-            'admin_type' => 'required|in:barber,admin',
-
+            // employee
+            'rfc'          => 'required|string|unique:employees,rfc|max:13',
+            'payment'      => 'required|numeric|min:0|max:10000',
+            'schedule'     => 'required|array',
+            'admin_type'   => 'required|in:barber,admin',
         ]);
 
         try {
-            return DB::transaction(function () use ($request){
-        
-                $user = User::create([
-                    'email' => $request->email,
-                    'password' => bcrypt($request->password),
-                ]);
-                $user->save();
+            DB::beginTransaction();
 
-                $person = Person::create([
-                    'name' => $request->name,
-                    'last_name' => $request->last_name,
-            
-                    'phone_number' => $request->phone_number
-                ]);
-                $person->save();
+            $user = User::create([
+                'email'    => $request->email,
+                'password' => bcrypt($request->password),
+            ]);
 
-                $employee = Employee::create([
-                    'userID' => $user->userID,
-                    'personID' => $person->personID,
-                    'payment' => $request->payment,
-                    'rfc' => $request->rfc,
-                    'schedule' => $request->schedule,
-                    'admin_type' => $request->admin_type,
-                ]);
+            $person = Person::create([
+                'name'         => $request->name,
+                'last_name'    => $request->last_name,
+                'phone_number' => $request->phone_number,
+            ]);
 
+            $employee = Employee::create([
+                'userID'     => $user->userID ?? $user->id,
+                'personID'   => $person->personID ?? $person->id,
+                'payment'    => $request->payment,
+                'rfc'        => $request->rfc,
+                'schedule'   => $request->schedule,
+                'workerType' => $request->workerType,
+            ]);
+
+            DB::commit();
+
+            if (request()->wantsJson()) {
                 return response()->json([
                     'message' => 'Empleado creado correctamente',
-                    'data' => $employee
-                ], 200);
-            });
-        } catch (\Exception $e) {
-                return response()->json([
-                    'message' => $e,
-                ], 500);
-        }
-    }
-
-    public function update(Request $request, $id){
-    $employee = Employee::with(['user', 'person'])->find($id);
-
-    if (!$employee) {
-        return response()->json([
-            'message' => 'Empleado no encontrado'
-        ], 404);
-    }
-
-    $request->validate([
-        // user
-        'email' => [
-            'sometimes', 'string', 'email', 'max:255',
-            Rule::unique('users', 'email')->ignore($id, 'userID'),
-        ],
-        'password' => 'sometimes|string|min:8|confirmed|max:255',
-        // person
-        'name' => 'sometimes|string|max:255',
-        'last_name' => 'sometimes|string|max:255',
-        'rfc' => [
-            'sometimes', 'string', 'max:13',
-            Rule::unique('persons', 'rfc')->ignore($id, 'personID'),
-        ],
-        'phone_number' => 'sometimes|string|max:10',
-        //employee
-        'payment' => 'sometimes|max:10000.00',
-        'schedule' => 'sometimes|date',
-        'admin_type' => 'sometimes|in:barber,admin',
-    ]);
-
-    try {
-        return DB::transaction(function () use ($request, $employee) {
-            
-            $userData = $request->only(['email']);
-            if ($request->filled('password')) {
-                $userData['password'] = bcrypt($request->password);
+                    'data'    => $employee->load(['user', 'person'])
+                ], 201);
             }
-            $employee->user->update($userData);
 
-            $employee->person->update($request->only(['name', 'last_name', 'rfc', 'phone_number']));
-
-            $employee->update($request->only(['payment', 'schedule', 'admin_type']));
-
-            return response()->json([
-                'message' => 'Empleado actualizado correctamente',
-                'data' => $employee->fresh(['user', 'person'])
-            ], 200);
-        });
+            return redirect()->back()->with('success', 'Empleado creado correctamente.');
 
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()],500);
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al crear el empleado: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Error al crear el empleado: ' . $e->getMessage());
         }
     }
 
-    public function destroy($id){
-        $employee = Employee::find($id);
+    public function update(Request $request, $id)
+    {
+        $employee = Employee::with(['user', 'person'])->find($id);
 
-        if(!$employee){
-            return response()->json([
-                'message' => 'Employee no encontrado'
-            ], 404);
+        if (!$employee) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Empleado no encontrado'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Empleado no encontrado.');
         }
-        
-        $employee->delete();
 
-        return response()->json([
-            'message' => 'Employee eliminado correctamente'
-        ], 200);
+        $userId = $employee->user ? ($employee->user->userID ?? $employee->user->id) : null;
+        $employeeId = $employee->employeeID ?? $employee->id;
+
+        $request->validate([
+            // user
+            'email' => [
+                'sometimes', 'string', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($userId, 'userID'),
+            ],
+            'password'     => 'sometimes|string|min:8|confirmed|max:255',
+            // person
+            'name'         => 'sometimes|string|max:255',
+            'last_name'    => 'sometimes|string|max:255',
+            'phone_number' => 'sometimes|string|max:10',
+            // employee
+            'rfc' => [
+                'sometimes', 'string', 'max:13',
+                Rule::unique('employees', 'rfc')->ignore($employeeId, 'employeeID'),
+            ],
+            'payment'      => 'sometimes|numeric|min:0|max:10000',
+            'schedule'     => 'sometimes|array',
+            'workerType'   => 'sometimes|in:barbero,admin,recepcionista',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            if ($employee->user) {
+                $userData = $request->only(['email']);
+                if ($request->filled('password')) {
+                    $userData['password'] = bcrypt($request->password);
+                }
+                if (!empty($userData)) {
+                    $employee->user->update($userData);
+                }
+            }
+
+            if ($employee->person) {
+                $employee->person->update($request->only(['name', 'last_name', 'phone_number']));
+            }
+
+            $employee->update($request->only(['payment', 'schedule', 'workerType', 'rfc']));
+
+            DB::commit();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Empleado actualizado correctamente',
+                    'data'    => $employee->fresh(['user', 'person'])
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Empleado actualizado correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al actualizar el empleado: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar el empleado: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        $employee = Employee::with(['user', 'person'])->find($id);
+
+        if (!$employee) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Empleado no encontrado'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Empleado no encontrado.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $user = $employee->user;
+            $person = $employee->person;
+
+            // Eliminar el empleado primero
+            $employee->delete();
+
+            // Eliminar los registros asociados en personas y usuarios
+            if ($person) {
+                $person->delete();
+            }
+            if ($user) {
+                $user->delete();
+            }
+
+            DB::commit();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Empleado eliminado correctamente'
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Empleado eliminado correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al eliminar el empleado: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Error al eliminar el empleado: ' . $e->getMessage());
+        }
     }
 }

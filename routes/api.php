@@ -2,6 +2,16 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Controladores de Autenticación
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+
+// Controladores de Dominio
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServiceController;
@@ -11,109 +21,105 @@ use App\Http\Controllers\ChairController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SellController;
 
-// Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
-// Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/clients', [ClientController::class, 'index']);
-    Route::get('/clients/{id}', [ClientController::class, 'show']);
-    Route::post('/clients', [ClientController::class, 'store']);
-    Route::put('/clients/{id}', [ClientController::class, 'update']);
-    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
-// });
-
-// Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::post('/users', [UserController::class, 'store']);
-    Route::put('/users/{id}', [UserController::class, 'update']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
-// });
-
-Route::post('/employees', [EmployeeController::class, 'store']);
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/employees', [EmployeeController::class, 'index']);
-    Route::get('/employees/{id}', [EmployeeController::class, 'show']);
-    
-    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
-    Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
+Route::middleware('guest')->group(function () {
+    Route::post('/register', [RegisteredUserController::class, 'store'])->name('register');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/services', [ServiceController::class, 'index']);
-    Route::get('/services/{id}', [ServiceController::class, 'show']);
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::put('/services/{id}', [ServiceController::class, 'update']);
-    Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
-});
-
-// Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/appointments', [AppointmentController::class, 'index']);
-    Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
-    Route::post('/appointments', [AppointmentController::class, 'store']);
-    Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
-    Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
-// });
-
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/chairs', [ChairController::class, 'index']);
-    Route::get('/chairs/{id}', [ChairController::class, 'show']);
-    Route::post('/chairs', [ChairController::class, 'store']);
-    Route::put('/chairs/{id}', [ChairController::class, 'update']);
-    Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
-});
-
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\VerifyEmailController;
-
-Route::post('/register', [RegisteredUserController::class, 'store'])
-    ->middleware('guest')
-    ->name('register');
-
-Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('guest')
-    ->name('login');
-
-Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-    ->middleware('guest')
-    ->name('password.email');
-
-Route::post('/reset-password', [NewPasswordController::class, 'store'])
-    ->middleware('guest')
-    ->name('password.store');
-
-Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
-    ->name('verification.verify');
-
-Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-    ->middleware(['auth', 'throttle:6,1'])
-    ->name('verification.send');
-
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
-
-Route::get('/cart', [CartController::class, 'index']);
-Route::post('/cart', [CartController::class, 'add']);
-Route::post('/cart/{id}', [CartController::class, 'more']);
-Route::get('/cart/{id}', [CartController::class, 'show']);
-Route::put('/cart/{id}', [CartController::class, 'update']);
-
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/categories/{id}', [CategoryController::class, 'show']);
-Route::post('/categories', [CategoryController::class, 'store']);
-Route::put('/categories/{id}', [CategoryController::class, 'update']);
-Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
-
+Route::get('/services', [ServiceController::class, 'index']);
+Route::get('/services/{id}', [ServiceController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
-Route::post('/products', [ProductController::class, 'store']);
-Route::put('/products/{id}', [ProductController::class, 'update']);
-Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::get('/chairs', [ChairController::class, 'index']);
+Route::get('/chairs/{id}', [ChairController::class, 'show']);
+
+
+/*
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/profile', [ClientController::class, 'profile']);
+    Route::put('/profile', [ClientController::class, 'updateProfile']);
+
+
+    // Autenticación y Verificación
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+
+    /*
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('client')->group(function () {
+        Route::get('/showClient', [AppointmentController::class, 'showClient']);
+
+        Route::get('/cart/{id}', [CartController::class, 'show']);
+        Route::post('/addCart/{product}/{client}', [CartController::class, 'add']);
+        Route::delete('/quitCart/{product}/{client}', [CartController::class, 'quitItem']);
+        Route::put('/moreCart/{product}/{client}', [CartController::class, 'more']);
+        Route::put('/lessCart/{product}/{client}', [CartController::class, 'less']);
+        
+        Route::post('/sells/{clientID}', [SellController::class, 'store']);
+    });
+
+
+    // ------------------------------------------------------------------------
+    Route::middleware('worker:barbero,recepcionista,admin')->group(function () {
+        Route::get('/appointments', [AppointmentController::class, 'index']);
+        Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
+        Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
+        Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
+    });
+
+    // ------------------------------------------------------------------------
+    Route::middleware('worker:recepcionista,admin')->group(function () {
+        Route::post('/appointments', [AppointmentController::class, 'store']);
+        Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
+        
+        Route::put('/appointments/{id}/status/{newStatus}', [AppointmentController::class, 'AlterAppointmentStatus']);
+
+        Route::get('/clients', [ClientController::class, 'index']);
+        Route::get('/clients/{id}', [ClientController::class, 'show']);
+        Route::post('/clients', [ClientController::class, 'store']);
+        Route::put('/clients/{id}', [ClientController::class, 'update']);
+
+        Route::get('/sells', [SellController::class, 'index']);
+        Route::post('/sells/{clientID}', [SellController::class, 'store']);
+    });
+
+    // ------------------------------------------------------------------------
+    Route::middleware('worker:admin')->group(function () {
+        Route::apiResource('employees', EmployeeController::class);
+
+        Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
+
+        Route::post('/services', [ServiceController::class, 'store']);
+        Route::put('/services/{id}', [ServiceController::class, 'update']);
+        Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
+
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{id}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+        Route::post('/chairs', [ChairController::class, 'store']);
+        Route::put('/chairs/{id}', [ChairController::class, 'update']);
+        Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
+
+        Route::get('/pdfAppointments/{filter}/{date}', [AppointmentController::class, 'invoke']);
+        Route::get('/pdfSells/{filter}/{date}', [SellController::class, 'dashboard_pdf']);
+    });
+});
