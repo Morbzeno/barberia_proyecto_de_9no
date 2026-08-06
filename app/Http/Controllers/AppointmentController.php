@@ -465,4 +465,19 @@ class AppointmentController extends Controller
         }
         Pdf::view('pdf.invoice', ['appointments' => $appointments, 'filter' => $filter, 'date' => $date])->save('C:/Users/USER/OneDrive/Documents/invoice'. $filter . $date .'.pdf');
     }
+
+    public function showDailyAppointments($date, $employeeID = null){
+        $appointments = Appointment::whereDate('startHour', $date)
+        ->where('chairID', $employeeID)
+        ->with('client', 'appointmentDetails.service')->get();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'message' => 'aqui estan las citas del dia',
+                'data' => $appointments
+            ], 200);
+        }
+
+        return view('appointments.index', compact('appointments'));
+    }
 }
