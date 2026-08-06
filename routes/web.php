@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\GoogleAuthController;
 
 // Ruta de la Landing Page Principal con el calendario de reservas
 Route::get('/', function () {
@@ -27,3 +28,8 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/add-to-cart/{product}', [CartController::class, 'add'])->name('cart.add');
 
 Route::get('/cart/{id}', [CartController::class, 'show'])->name('cart.show');
+
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+
+// Route to handle the callback from Google
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');

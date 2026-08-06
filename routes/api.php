@@ -88,6 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
         Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
 
+
+
+        Route::get('/showDailyAppointments/{date}/{employeeID?}', [AppointmentController::class, 'showDailyAppointments']);
+
     });
 
     // ---------------- RECEPCIONISTA / ADMIN ----------------
