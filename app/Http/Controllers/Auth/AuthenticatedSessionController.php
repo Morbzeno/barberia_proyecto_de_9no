@@ -26,15 +26,35 @@ class AuthenticatedSessionController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'The provided credentials are incorrect'
+                ], 422);
+            }
+
+            return back()->withErrors([
+                'email' => 'Las credenciales proporcionadas no son correctas.',
+            ])->onlyInput('email');
+        }
+
+        // Inicia sesión web (necesario para las rutas protegidas con "auth"/"admin")
+        Auth::guard('web')->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        if ($request->wantsJson()) {
+            $token = $user->createToken('barberia-api-token');
             return [
-                'message' => 'The provided credentials are incorrect'
+                "user" => $user,
+                "token" => $token->plainTextToken
             ];
         }
-        $token = $user->createToken('barberia-api-token');
-        return [
-            "user" => $user,
-            "token" => $token->plainTextToken
-        ];
+
+        $user->loadMissing('employee');
+        if ($user->employee && $user->employee->admin_type === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->intended(route('home'));
     }
 
     /**

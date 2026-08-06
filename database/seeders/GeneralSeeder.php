@@ -49,7 +49,7 @@ class GeneralSeeder extends Seeder
 
         DB::table('persons')->insert([
             'name' => 'trabajador',
-            'last_name' => 'trabajador',
+            'last_name' => 'Perez',
             'phone_number' => 333333333
         ]);
 
@@ -82,7 +82,7 @@ class GeneralSeeder extends Seeder
             'payment' => $faker->randomFloat(2, 10, 10000),
             'schedule' => json_encode($randomSchedule),
             'rfc' => Str::random(13),
-            'workerType' => 'admin',
+            'admin_Type' => 'admin',
                     
             'created_at' => now(),
             'updated_at' => now(),
@@ -95,7 +95,7 @@ class GeneralSeeder extends Seeder
             'payment' => $faker->randomFloat(2, 10, 10000),
             'schedule' => json_encode($randomSchedule),
             'rfc' => Str::random(13),
-            'workerType' => 'barbero',
+            'admin_Type' => 'barber',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -106,7 +106,7 @@ class GeneralSeeder extends Seeder
             'payment' => $faker->randomFloat(2, 10, 10000),
             'schedule' => json_encode($randomSchedule),
             'rfc' => Str::random(13),   
-            'workerType' => 'recepcionista',
+            'admin_Type' => 'receptionist',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
