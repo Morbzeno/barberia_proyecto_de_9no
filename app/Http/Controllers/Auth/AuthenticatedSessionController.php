@@ -4,70 +4,68 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Handle an incoming authentication request.
-     */
-
     public function store(LoginRequest $request)
     {
-        $request->validate([
-            'email' => 'email|required|exists:users',
-            'password' => 'required',
-        ]);
-        $user = User::where('email', $request->email)->first();
+        // Buscamos por email o por nombre de persona
+        $user = User::where('email', $request->email)
+            ->orWhereHas('client.person', function($q) use ($request) {
+                $q->where('name', $request->email);
+            })
+            ->orWhereHas('employee.person', function($q) use ($request) {
+                $q->where('name', $request->email);
+            })
+            ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'The provided credentials are incorrect'
-                ], 422);
-            }
-
-            return back()->withErrors([
-                'email' => 'Las credenciales proporcionadas no son correctas.',
-            ])->onlyInput('email');
+            return response()->json([
+                'message' => 'The provided credentials are incorrect'
+            ], 401);
         }
 
-        // Inicia sesión web (necesario para las rutas protegidas con "auth"/"admin")
-        Auth::guard('web')->login($user, $request->boolean('remember'));
-        $request->session()->regenerate();
+        // Cargar relaciones para el nombre real y rol
+        $user->load(['client.person', 'employee.person']);
 
-        if ($request->wantsJson()) {
-            $token = $user->createToken('barberia-api-token');
-            return [
-                "user" => $user,
-                "token" => $token->plainTextToken
-            ];
+        $realName = 'Usuario';
+        $role = 'client';
+        $adminType = null;
+
+        if ($user->employee) {
+            $realName = $user->employee->person->name ?? 'Empleado';
+            $role = 'employee';
+            $adminType = $user->employee->admin_type;
+        } elseif ($user->client) {
+            $realName = $user->client->person->name ?? 'Cliente';
+            $role = 'client';
         }
 
-        $user->loadMissing('employee');
-        if ($user->employee && $user->employee->admin_type === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
+        // Generar token para la App
+        $token = $user->createToken('barberia-api-token')->plainTextToken;
 
-        return redirect()->intended(route('home'));
+        return response()->json([
+            "user" => [
+                "userID" => $user->userID,
+                "name" => $realName,
+                "email" => $user->email,
+                "role" => $role,
+                "admin_type" => $adminType
+            ],
+            "token" => $token
+        ]);
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
-    public function destroy(Request $request): Response
+    public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-
-        return response()->noContent();
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+        }
+        return response()->json(['message' => 'Logged out'], 200);
     }
 }
