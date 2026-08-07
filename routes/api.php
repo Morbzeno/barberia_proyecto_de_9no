@@ -35,13 +35,10 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])->middlew
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{id}', [ServiceController::class, 'show']);
-
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
-
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
-
 Route::get('/chairs', [ChairController::class, 'index']);
 Route::get('/chairs/{id}', [ChairController::class, 'show']);
 
@@ -53,61 +50,55 @@ Route::get('/chairs/{id}', [ChairController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    // User Profile
     Route::get('/profile', [UserController::class, 'profile']);
-    Route::get('/showClient', [AppointmentController::class, 'showClient']);
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-    // Logout
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('api.logout');
+    Route::get('/barbers', [EmployeeController::class, 'barbers']);
 
-    // Users Management
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::post('/users', [UserController::class, 'store']);
-    Route::put('/users/{id}', [UserController::class, 'update']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    // ---------------- CLIENTE ----------------
+    Route::middleware('client')->group(function () {
+        Route::get('/showClient', [AppointmentController::class, 'showClient']);
+        Route::post('/appointments', [AppointmentController::class, 'store']);
+        Route::get('/clientDailyAvailability/{date}/{employeeID?}', [AppointmentController::class, 'showDailyAppointments']);
 
-    // Clients Management
-    Route::get('/clients', [ClientController::class, 'index']);
-    Route::get('/clients/{id}', [ClientController::class, 'show']);
-    Route::post('/clients', [ClientController::class, 'store']);
-    Route::put('/clients/{id}', [ClientController::class, 'update']);
-    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
+        Route::get('/cart/{id}', [CartController::class, 'show']);
+        Route::post('/addCart/{product}/{client}', [CartController::class, 'add']);
+        Route::delete('/quitCart/{product}/{client}', [CartController::class, 'quitItem']);
+        Route::put('/moreCart/{product}/{client}', [CartController::class, 'more']);
+        Route::put('/lessCart/{product}/{client}', [CartController::class, 'less']);
+        Route::post('/paypal/create', [CartController::class, 'createPaypalOrder']);
+    });
 
-    // Employees Management
-    Route::get('/employees', [EmployeeController::class, 'index']);
-    Route::get('/employees/{id}', [EmployeeController::class, 'show']);
-    Route::post('/employees', [EmployeeController::class, 'store']);
-    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
-    Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
+    // ---------------- TRABAJADORES (Barber, Rec, Admin) ----------------
+    Route::middleware('worker:barber,receptionist,admin')->group(function () {
+        Route::get('/appointments', [AppointmentController::class, 'index']);
+        Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
+        Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
+        Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
+    });
 
-    // Services Management
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::put('/services/{id}', [ServiceController::class, 'update']);
-    Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
+    // ---------------- RECEPCIONISTA / ADMIN ----------------
+    Route::middleware('worker:receptionist,admin')->group(function () {
+        Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
+        Route::put('/appointments/{id}/status/{newStatus}', [AppointmentController::class, 'AlterAppointmentStatus']);
 
-    // Appointments Management
-    Route::get('/appointments', [AppointmentController::class, 'index']);
-    Route::get('/appointments/{id}', [AppointmentController::class, 'show']);
-    Route::get('/appointmentsDay/{id}/{day}', [AppointmentController::class, 'showDay']);
-    Route::post('/appointments', [AppointmentController::class, 'store']);
-    Route::put('/appointments/{id}', [AppointmentController::class, 'update']);
-    Route::delete('/appointments/{id}', [AppointmentController::class, 'destroy']);
+        Route::apiResource('users', UserController::class);
+        Route::apiResource('clients', ClientController::class);
+    });
 
-    // Chairs Management
-    Route::post('/chairs', [ChairController::class, 'store']);
-    Route::put('/chairs/{id}', [ChairController::class, 'update']);
-    Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
+    // ---------------- ADMIN ONLY ----------------
+    Route::middleware('worker:admin')->group(function () {
+        Route::apiResource('employees', EmployeeController::class);
+        Route::post('/services', [ServiceController::class, 'store']);
+        Route::put('/services/{id}', [ServiceController::class, 'update']);
+        Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
 
-    // Cart Management
-    Route::get('/cart/{id}', [CartController::class, 'show']);
-    Route::post('/addCart/{product}/{client}', [CartController::class, 'add']);
-    Route::delete('/quitCart/{product}/{client}', [CartController::class, 'quitItem']);
-    Route::put('/moreCart/{product}/{client}', [CartController::class, 'more']);
-    Route::put('/lessCart/{product}/{client}', [CartController::class, 'less']);
-    Route::post('/paypal/create', [CartController::class, 'createPaypalOrder']);
+        Route::post('/chairs', [ChairController::class, 'store']);
+        Route::put('/chairs/{id}', [ChairController::class, 'update']);
+        Route::delete('/chairs/{id}', [ChairController::class, 'destroy']);
+    });
 
-    // Domain specific (Categories and Products write access)
+    // Specific Product/Category write access
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::put('/categories/{id}', [CategoryController::class, 'update']);
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);

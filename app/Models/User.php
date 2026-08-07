@@ -62,6 +62,9 @@ class User extends Authenticatable
 
         $employee = $this->employee;
 
-        return in_array($employee->admin_Type, $roles);
+        // Soporte para admin_type o admin_Type según la versión
+        $type = $employee->admin_type ?? $employee->admin_Type;
+
+        return in_array($type, $roles, true);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\GoogleAuthController;
 
 // Landing Page Principal
 Route::get('/', function () {
@@ -41,11 +42,14 @@ Route::get('/products', [ProductController::class, 'index'])
     ->name('products.index');
 
 // Carrito
+Route::get('/cart/{id}', [CartController::class, 'show'])->name('cart.show');
+
 Route::get('/add-to-cart/{product}', [CartController::class, 'add'])
     ->name('cart.add');
 
-Route::get('/cart/{id}', [CartController::class, 'show'])
-    ->name('cart.show');
+// Google Auth
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 // Panel de administración
 require __DIR__.'/admin.php';

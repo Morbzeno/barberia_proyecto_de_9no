@@ -9,52 +9,32 @@ use Illuminate\Support\Facades\DB;
 class ChairController extends Controller
 {
     public function index()
-    {
-        $chairs = Chair::with('services')->paginate(10);
+{
+    $chairs = Chair::with('services')->paginate(10);
 
-        if (request()->wantsJson()) {
-            if ($chairs->isEmpty()) {
-                return response()->json([
-                    'message' => 'No se encontraron Chairs.'
-                ], 404);
-            }
+    return response()->json([
+        'message' => $chairs->isEmpty()
+            ? 'No se encontraron Chairs.'
+            : 'Todos los Chairs aquí',
+        'data' => $chairs
+    ], 200);
+}
 
-            return response()->json([
-                'message' => 'Todos los Chairs aquí',
-                'data'    => $chairs
-            ], 200);
-        }
+public function show($id)
+{
+    $chair = Chair::with('services')->find($id);
 
-        if ($chairs->isEmpty()) {
-            return redirect()->back()->with('error', 'No se encontraron Chairs.');
-        }
-
-        return view('chairs.index', compact('chairs'));
+    if (!$chair) {
+        return response()->json([
+            'message' => 'Chair no encontrado.'
+        ], 404);
     }
 
-    public function show($id)
-    {
-        $chair = Chair::with('services')->find($id);
-
-        if (request()->wantsJson()) {
-            if (!$chair) {
-                return response()->json([
-                    'message' => 'Chair no encontrado.'
-                ], 404);
-            }
-
-            return response()->json([
-                'message' => 'Datos del Chair obtenidos correctamente',
-                'data'    => $chair
-            ], 200);
-        }
-
-        if (!$chair) {
-            return redirect()->back()->with('error', 'Chair no encontrado.');
-        }
-
-        return view('chairs.show', compact('chair'));
-    }
+    return response()->json([
+        'message' => 'Datos del Chair obtenidos correctamente.',
+        'data' => $chair
+    ], 200);
+}
 
     public function store(Request $request)
     {
