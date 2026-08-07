@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class payment extends Model
+class Payment extends Model
 {
     use SoftDeletes;
     protected $primaryKey = 'paymentID';
     protected $fillable = ['appointmentID', 'subtotal', 'paymentMethod'];
+
+    public function appointment(){
+        return $this->belongsTo(Appointment::class, 'appointmentID', 'appointmentID');
+    }
 
 }

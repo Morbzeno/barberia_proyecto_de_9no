@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('appointmentID');
             $table->foreignId('serviceID');
             $table->decimal('totalPrice', 8, 2);
+            $table->foreign('appointmentID')->references('appointmentID')->on('appointments')->onDelete('cascade');
+            $table->foreign('serviceID')->references('serviceID')->on('services')->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();
         });

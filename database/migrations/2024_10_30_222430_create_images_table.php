@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payments', function (Blueprint $table) {
-            $table->id('paymentID');
-            $table->foreignId('appointmentID');
-            $table->decimal('subtotal', 8, 2);
-            $table->text('paymentMethod');
+        Schema::create('images', function (Blueprint $table) {
+            $table->id('imageID');
+            $table->string('image', 256);
             $table->softDeletes();
             $table->timestamps();
         });
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payments');
+        Schema::dropIfExists('images');
     }
 };
