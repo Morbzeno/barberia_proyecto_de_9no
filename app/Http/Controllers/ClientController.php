@@ -220,4 +220,23 @@ class ClientController extends Controller
             ], 500);
         }
     }
+
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        $client = Client::where('userID', $user->userID)->first();
+
+        if (!$client) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'clientId' => $client->clientID,
+                'name' => $user->name,
+                'email' => $user->email
+            ]
+        ]);
+    }
 }

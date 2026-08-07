@@ -247,4 +247,20 @@ class AppointmentController extends Controller
         $appointment->save();
         return response()->json(['message' => 'Estado actualizado', 'data' => $appointment->load('client', 'appointmentDetails.service')], 200);
     }
+
+    public function showClient(Request $request)
+    {
+        $clientID = $request->query('clientID');
+        if (!$clientID) {
+            return response()->json(['message' => 'clientID es requerido'], 400);
+        }
+
+        $appointments = Appointment::with(['client', 'appointmentDetails.service'])
+            ->where('clientID', $clientID)
+            ->whereIn('status', ['pending', 'in_process'])
+            ->orderBy('startHour', 'asc')
+            ->get();
+
+        return response()->json($appointments);
+    }
 }

@@ -15,12 +15,21 @@ class Cart extends Model
     ];
     public function client()
     {
-        return $this->belongsTo(Client::class, 'clientID', 'clientID'); // Ajusta el nombre de la clave foránea si es necesario
+        return $this->belongsTo(Client::class, 'clientID', 'clientID');
     }
+
+    // Relación original
     public function productsCart()
     {
-        return $this->hasMany(ProductsCart::class, 'cartID', 'cartID'); // Ajusta el nombre de la clave foránea si es necesario
+        return $this->hasMany(ProductsCart::class, 'cartID', 'cartID');
     }
+
+    // Alias para la App Android
+    public function products_cart()
+    {
+        return $this->hasMany(ProductsCart::class, 'cartID', 'cartID');
+    }
+
     public function sell()
     {
         return $this->hasOne(Sell::class, 'sellID', 'sellID');
