@@ -51,20 +51,44 @@ class AppointmentController extends Controller
         ], 200);
     }
 
-    public function showDailyAppointments($date, $employeeID = null){
-        $query = Appointment::whereDate('startHour', $date);
+public function showDailyAppointments($date, $employeeID = null){
+    $query = Appointment::whereDate('startHour', $date);
 
-        if ($employeeID) {
-            $query->where('chairID', $employeeID);
-        }
-
-        $appointments = $query->with('client', 'appointmentDetails.service')->get();
-
-        return response()->json([
-            'message' => 'Aquí están las citas del día',
-            'data' => $appointments
-        ], 200);
+    if ($employeeID) {
+        $query->where('chairID', $employeeID);
     }
+
+    $appointments = $query
+        ->with('client', 'appointmentDetails.service')
+        ->get();
+
+    return response()->json([
+        'message' => 'Aquí están las citas del día',
+        'data' => $appointments
+    ], 200);
+}
+
+
+// NUEVO MÉTODO PARA ANDROID
+// Consulta las citas del día filtrando por BARBERO (employeeID).
+public function showDailyAppointmentsByEmployee($date, $employeeID)
+{
+    $appointments = Appointment::whereDate('startHour', $date)
+        ->where('employeeID', $employeeID)
+        ->where('status', '!=', 'cancelled')
+        ->with(
+            'client',
+            'appointmentDetails.service'
+        )
+        ->orderBy('startHour', 'asc')
+        ->get();
+
+    return response()->json([
+        'message' => 'Aquí están las citas del barbero del día',
+        'data' => $appointments
+    ], 200);
+}
+
 
     public function availability(Request $request)
     {
@@ -247,6 +271,40 @@ class AppointmentController extends Controller
         $appointment->save();
         return response()->json(['message' => 'Estado actualizado', 'data' => $appointment->load('client', 'appointmentDetails.service')], 200);
     }
+
+    public function barberAppointments(Request $request)
+{
+    $user = $request->user();
+
+    if (!$user) {
+        return response()->json([
+            'message' => 'Usuario no autenticado.'
+        ], 401);
+    }
+
+    $employee = Employee::where('userID', $user->userID)
+        ->where('admin_type', 'barber')
+        ->first();
+
+    if (!$employee) {
+        return response()->json([
+            'message' => 'No se encontró un barbero asociado a este usuario.'
+        ], 404);
+    }
+
+    $appointments = Appointment::with([
+        'client',
+        'appointmentDetails.service'
+    ])
+        ->where('employeeID', $employee->employeeID)
+        ->orderBy('startHour', 'asc')
+        ->get();
+
+    return response()->json([
+        'message' => 'Citas del barbero obtenidas correctamente.',
+        'data' => $appointments
+    ], 200);
+}
 
     public function showClient(Request $request)
     {

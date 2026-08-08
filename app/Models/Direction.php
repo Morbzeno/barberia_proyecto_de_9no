@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Direction extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $primaryKey = 'directionID';
 
     protected $fillable = [
@@ -23,10 +24,19 @@ class Direction extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'userID', 'userID');
+        return $this->belongsTo(
+            User::class,
+            'userID',
+            'userID'
+        );
     }
-    public function sell()
+
+    public function sells()
     {
-        return $this->hasOne(Sell::class, 'sellID', 'sellID');
+        return $this->hasMany(
+            Sell::class,
+            'directionID',
+            'directionID'
+        );
     }
 }

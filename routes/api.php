@@ -98,6 +98,11 @@ Route::get(
     [ChairController::class, 'show']
 );
 
+Route::get(
+    '/appointmentsEmployeeDay/{date}/{employeeID}',
+    [AppointmentController::class, 'showDailyAppointmentsByEmployee']
+);
+
 // ---------------------------------------------------------
 // PAYPAL
 // Estas deben ser públicas porque PayPal redirige aquí.
@@ -138,6 +143,11 @@ Route::middleware('auth:sanctum')->group(function () {
         '/barbers',
         [EmployeeController::class, 'barbers']
     );
+
+    Route::get(
+    '/barber/appointments',
+    [AppointmentController::class, 'barberAppointments']
+);
 
     // -----------------------------------------------------
     // LOGOUT
@@ -190,6 +200,10 @@ Route::middleware('auth:sanctum')->group(function () {
             '/clientDailyAvailability/{date}/{employeeID?}',
             [AppointmentController::class, 'showDailyAppointments']
         );
+
+        Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/my-orders', [SellController::class, 'myOrders']);
+});
 
         // -------------------------------------------------
         // CARRITO
@@ -315,6 +329,13 @@ Route::middleware('auth:sanctum')->group(function () {
             '/sells/{clientID}',
             [SellController::class, 'store']
         );
+
+        Route::get('/orders', [SellController::class, 'orders']);
+
+Route::put(
+    '/orders/{id}/status',
+    [SellController::class, 'updateOrderStatus']
+);
     });
 
     // =====================================================

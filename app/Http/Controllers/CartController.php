@@ -8,6 +8,9 @@ use App\Models\Product;
 use App\Models\ProductsCart;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Sell;
+use App\Models\Direction;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -166,19 +169,122 @@ class CartController extends Controller
         'http://127.0.0.1:8000'
     );
 
-    $clientID = $request->query('clientID');
+    $clientID = (int) $request->query('clientID');
 
     $cart = Cart::where('clientID', $clientID)->first();
 
-    if ($cart) {
-        ProductsCart::where('cartID', $cart->cartID)
-            ->where('state', 'waiting')
-            ->update([
-                'state' => 'sell'
-            ]);
+    if (!$cart) {
+        return response(
+            'No se encontró el carrito del cliente.',
+            404
+        );
+    }
 
-        $cart->total = 0;
-        $cart->save();
+    $items = ProductsCart::where('cartID', $cart->cartID)
+        ->where('state', 'waiting')
+        ->get();
+
+    if ($items->isEmpty()) {
+        return response(
+            'No hay productos pendientes en el carrito.',
+            400
+        );
+    }
+
+    $client = $cart->client;
+
+    if (!$client) {
+        return response(
+            'No se encontró el cliente.',
+            404
+        );
+    }
+
+    $direction = Direction::where(
+        'userID',
+        $client->userID
+    )->first();
+
+    if (!$direction) {
+        return response(
+            'El cliente no tiene una dirección registrada.',
+            422
+        );
+    }
+
+    try {
+        DB::beginTransaction();
+
+        $total = 0;
+
+        foreach ($items as $item) {
+            $product = Product::where(
+                'productID',
+                $item->productID
+            )
+                ->lockForUpdate()
+                ->first();
+
+            if (!$product) {
+                throw new \Exception(
+                    "Producto {$item->productID} no encontrado."
+                );
+            }
+
+            if ($product->stock < $item->quantity) {
+                throw new \Exception(
+                    "Stock insuficiente para {$product->name}."
+                );
+            }
+
+            $total += (float) $item->subtotal;
+        }
+
+        $iva = round($total * 0.16, 2);
+        $totalConIva = round($total + $iva, 2);
+
+        $sell = Sell::create([
+            'cartID' => $cart->cartID,
+            'clientID' => $clientID,
+            'directionID' => $direction->directionID,
+            'total' => $totalConIva,
+            'iva' => $iva,
+            'purchase_method' => 'paypal',
+            'status' => 'paid',
+        ]);
+
+        foreach ($items as $item) {
+            $product = Product::where(
+                'productID',
+                $item->productID
+            )
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $product->decrement(
+                'stock',
+                $item->quantity
+            );
+
+            $item->update([
+                'state' => 'sell',
+                'sellID' => $sell->sellID,
+            ]);
+        }
+
+        $cart->update([
+            'total' => 0
+        ]);
+
+        DB::commit();
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response(
+            'Error al registrar la compra: ' . $e->getMessage(),
+            500
+        );
     }
 
     return "
@@ -191,16 +297,9 @@ class CartController extends Controller
             </h1>
 
             <p style='color: #6b7280; margin-bottom: 30px;'>
-                Tu pedido ha sido procesado con éxito.
-                Ya puedes regresar a la aplicación.
+                Tu compra fue registrada correctamente.
+                Ya puedes regresar a Machin Barber.
             </p>
-
-            <a
-                href='{$baseUrl}/products'
-                style='background-color: #4f46e5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;'
-            >
-                Volver a la Tienda
-            </a>
         </div>
     </body>";
 }

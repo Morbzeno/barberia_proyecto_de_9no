@@ -366,6 +366,71 @@ class SellController extends Controller
         );
     }
 
+
+public function myOrders(Request $request)
+{
+    $user = $request->user();
+
+    if (!$user || !$user->client) {
+        return response()->json([
+            'message' => 'Cliente no autenticado.'
+        ], 403);
+    }
+
+    $clientID = $user->client->clientID;
+
+    $orders = Sell::with([
+        'productsCart.producto'
+    ])
+        ->where('clientID', $clientID)
+        ->orderByDesc('created_at')
+        ->get();
+
+    return response()->json([
+        'message' => 'Pedidos obtenidos correctamente.',
+        'data' => $orders
+    ], 200);
+}
+public function orders()
+{
+    $orders = Sell::with([
+        'client',
+        'direction',
+        'productsCart.producto'
+    ])
+        ->orderByDesc('created_at')
+        ->get();
+
+    return response()->json([
+        'message' => 'Pedidos obtenidos correctamente.',
+        'data' => $orders
+    ], 200);
+}
+
+public function updateOrderStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:paid,preparing,ready,delivered,cancelled'
+    ]);
+
+    $sell = Sell::find($id);
+
+    if (!$sell) {
+        return response()->json([
+            'message' => 'Pedido no encontrado.'
+        ], 404);
+    }
+
+    $sell->status = $request->status;
+    $sell->save();
+
+    return response()->json([
+        'message' => 'Estado del pedido actualizado.',
+        'data' => $sell
+    ], 200);
+}
+
+
     /**
      * Respuesta de error común.
      */
