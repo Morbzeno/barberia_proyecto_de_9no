@@ -218,5 +218,36 @@ class SellController extends Controller
 
         Pdf::view('pdf.sells', ['sales' => $sells])->save('C:/Users/USER/OneDrive/Documents/sells'. $filter . $date .'.pdf');
     }
+    public function procesarVentaInterna($clientID, $method = 'Efectivo', $directionID = null)
+    {
+        $cart = Cart::where('clientID', $clientID)->firstOrFail();
+        $total = ProductsCart::where('cartID', $cart->cartID)
+            ->where('state', 'waiting')
+            ->sum('subtotal');
 
+        if ($total <= 0) {
+            throw new \Exception('El carrito no contiene productos válidos.');
+        }
+
+        return DB::transaction(function () use ($cart, $clientID, $total, $method, $directionID) {
+            $iva = $total * 0.16;
+            
+            $sell = Sell::create([
+                'cartID'          => $cart->cartID,
+                'clientID'        => $clientID,
+                'directionID'     => $directionID,
+                'total'           => $total + $iva,
+                'iva'             => $iva,
+                'purchase_method' => $method,
+            ]);
+
+            ProductsCart::where('cartID', $cart->cartID)
+                ->where('state', 'waiting')
+                ->update(['state' => 'sell']);
+
+            $cart->update(['total' => $total]);
+
+            return $sell;
+        });
+    }
 }

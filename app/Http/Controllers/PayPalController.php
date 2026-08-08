@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use App\Http\Controllers\SellController;
 
 class PayPalController extends Controller
 {
@@ -39,10 +41,15 @@ class PayPalController extends Controller
 
             $formattedTotal = number_format($request->total, 2, '.', '');
 
+// En PayPalController.php -> createOrder()
+
             $orderData = [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [
                     [
+                        // ⬇️ AGREGA ESTA LÍNEA PARA QUE PAYPAL GUARDE EL ID DEL CLIENTE
+                        'custom_id' => (string) $request->client_id, 
+
                         'amount' => [
                             'currency_code' => 'USD',
                             'value'         => $formattedTotal,
@@ -122,6 +129,14 @@ class PayPalController extends Controller
             $response = $paypal->capturePaymentOrder($token);
 
             if (isset($response['status']) && $response['status'] === 'COMPLETED') {
+
+                // Use the authenticated user's id safely if available
+                $clientID = $response['purchase_units'][0]['custom_id']
+                    ?? Auth::id()
+                    ?? Auth::user()?->clientID;
+            
+            // Llamas al método/servicio que guarda la venta
+                $sell = app(SellController::class)->procesarVentaInterna($clientID, 'PayPal');
                 if (request()->wantsJson()) {
                     return response()->json([
                         'message' => 'Pago completado correctamente.',
