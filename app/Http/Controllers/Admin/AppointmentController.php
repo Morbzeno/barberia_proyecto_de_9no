@@ -8,6 +8,7 @@ use App\Models\Chair;
 use App\Models\Client;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {

@@ -3,6 +3,52 @@
 @section('title', 'Resumen')
 @section('subtitle', 'Vista general del negocio')
 
+@section('header-actions')
+    <form
+        action="{{ route('admin.reports.general.pdf') }}"
+        method="GET"
+        class="flex flex-wrap items-end gap-3"
+    >
+
+        {{-- FECHA INICIAL --}}
+        <div>
+            <label class="block text-xs font-semibold text-[#6b5c46] mb-1">
+                Desde
+            </label>
+
+            <input
+                type="date"
+                name="start_date"
+                value="{{ request('start_date', now()->startOfMonth()->format('Y-m-d')) }}"
+                class="border border-black/10 rounded-lg px-3 py-2 text-sm bg-white"
+            >
+        </div>
+
+        {{-- FECHA FINAL --}}
+        <div>
+            <label class="block text-xs font-semibold text-[#6b5c46] mb-1">
+                Hasta
+            </label>
+
+            <input
+                type="date"
+                name="end_date"
+                value="{{ request('end_date', now()->format('Y-m-d')) }}"
+                class="border border-black/10 rounded-lg px-3 py-2 text-sm bg-white"
+            >
+        </div>
+
+        {{-- BOTÓN --}}
+        <button
+            type="submit"
+            class="inline-flex items-center gap-2 bg-[#a3352a] text-white px-5 py-2.5 rounded-lg hover:bg-[#852a22] transition"
+        >
+            Generar reporte PDF
+        </button>
+
+    </form>
+@endsection
+
 @section('content')
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     @php

@@ -16,9 +16,9 @@
 }
 
 body{
-    background:#0d0d0d;
+    background:#15110c;
     font-family:'Poppins', sans-serif;
-    color:blue;
+    color:#f3ead9;
 }
 
 header{
@@ -41,12 +41,17 @@ header{
     padding:18px 0;
 }
 
+
+
 .logo{
     font-family:'Cinzel', serif;
     font-size:32px;
     color:#d4af37;
     letter-spacing:3px;
 }
+
+.cart-link{ position:relative; display:flex; align-items:center; gap:7px; }
+.cart-count{ min-width:20px; height:20px; display:flex; justify-content:center; align-items:center; padding:0 5px; border-radius:50%; background:#d4af37; color:#000; font-size:11px; font-weight:700; }
 
 .nav-links{
     display:flex;
@@ -70,6 +75,10 @@ header{
     padding:12px 24px;
     border-radius:12px;
     font-weight:600;
+}
+.logout-link{ background:none; border:none; color:#ffffff; font:inherit; cursor:pointer; padding:0; transition:0.3s; }
+.logout-link:hover{
+    color: #c9a227;
 }
 
 .hero{
@@ -101,9 +110,9 @@ header{
     background:rgba(0,0,0,0.55);
 }
 
-.slide1{ background-image:url('https://images.unsplash.com/photo-1517832606299-7ae9b720a186?q=80&w=1920&auto=format&fit=crop'); }
-.slide2{ background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1920&auto=format&fit=crop'); }
-.slide3{ background-image:url('https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=1920&auto=format&fit=crop'); }
+.slide1{ background-image:url('https://maonzbarbershop.com/cdn/shop/articles/5-accesorios-imprescindibles-que-no-pueden-faltar-en-tu-barberia-483798.jpg?v=1744622379'); }
+.slide2{ background-image:url('https://joseppons.com/formacion/wp-content/uploads/2021/05/estudiar-barberia.jpg'); }
+.slide3{ background-image:url('https://www.shutterstock.com/image-photo/professional-barber-tools-laid-out-600nw-2447454089.jpg'); }
 
 @keyframes slide{
     0%{ transform:translateX(0); }
@@ -151,27 +160,126 @@ header{
 }
 
 .btn-primary{ background:#d4af37; color:black; font-weight:600; }
-.btn-secondary{ border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.05); color:white; }
+.btn-secondary{ border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.05); color:white; transition:0.3s; }
+.hero-buttons a.btn-secondary:hover{ border-color:#7c2530; background:rgba(124,37,48,0.12); }
 
-.about-section{ padding:100px 10%; background:#111; }
+.about-section{ padding:100px 10%; background:#1c1610; }
 .about-container{ display:flex; justify-content:space-between; align-items:center; gap:60px; flex-wrap:wrap; }
 .about-text{ flex:1; }
 .about-text h2{ font-family:'Cinzel', serif; font-size:45px; color:#d4af37; margin-bottom:20px; }
 .about-text p{ color:rgba(255,255,255,0.75); line-height:1.8; }
 .about-image img{ width:520px; height:350px; object-fit:cover; border-radius:20px; }
 
-.services-section{ padding:100px 10%; }
-.services-title{ text-align:center; font-family:'Cinzel', serif; font-size:45px; color:#d4af37; margin-bottom:60px; }
-.cards-container{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:30px; }
-.service-card{ background:rgba(255,255,255,0.05); border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); transition:0.3s; }
-.service-card:hover{ transform:translateY(-8px); }
-.service-card img{ width:100%; height:240px; object-fit:cover; }
-.card-content{ padding:25px; }
-.card-content h3{ color:#d4af37; margin-bottom:18px; }
-.card-content ul{ list-style:none; }
-.card-content ul li{ margin-bottom:10px; color:rgba(255,255,255,0.75); }
+.services-section {
+    padding: 100px 10%;
+    background: #08090b;
+}
 
-.booking-section{ padding:100px 10%; background:#111; }
+.services-title {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 45px;
+    color: #d4af37;
+    margin-bottom: 60px;
+}
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 30px;
+}
+
+.service-card {
+    grid-column: span 2;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+/* Hace que los últimos 4 queden centrados */
+.service-card:nth-child(6) {
+    grid-column: 2 / span 2;
+}
+
+.service-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(212, 175, 55, 0.6);
+}
+
+.service-card img {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    display: block;
+}
+
+.card-content {
+    padding: 25px;
+}
+
+.card-content h3 {
+    color: #d4af37;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+}
+
+.card-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+    min-height: 78px;
+}
+
+.card-content ul li {
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 9px;
+    line-height: 1.5;
+    padding-left: 18px;
+    position: relative;
+}
+
+.card-content ul li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #d4af37;
+}
+
+.service-price {
+    display: block;
+    color: #d4af37;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+@media (max-width: 1200px) {
+    .cards-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .service-card,
+    .service-card:nth-child(6) {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .cards-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 550px) {
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.booking-section{ padding:100px 10%; background:#1c1610; }
 .booking-title{ text-align:center; font-family:'Cinzel', serif; font-size:45px; color:#d4af37; margin-bottom:15px; }
 .booking-subtitle{ text-align:center; color:rgba(255,255,255,0.7); margin-bottom:50px; }
 .booking-container{ max-width:950px; margin:auto; background:rgba(255,255,255,0.05); border-radius:25px; padding:40px; border:1px solid rgba(255,255,255,0.08); }
@@ -185,7 +293,7 @@ header{
 .selected-chair-text{ text-align:center; margin-top:20px; color:rgba(255,255,255,0.7); }
 .selected-chair-text span{ color:#d4af37; font-weight:600; }
 
-.calendar-section{ margin-top:50px; max-width:720px; margin-left:auto; margin-right:auto; padding:28px; background:#0d0d0d; border:1px solid rgba(255,255,255,0.08); border-radius:22px; }
+.calendar-section{ margin-top:50px; max-width:720px; margin-left:auto; margin-right:auto; padding:28px; background:#15110c; border:1px solid rgba(255,255,255,0.08); border-radius:22px; }
 .calendar-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
 .calendar-header h3{ color:#d4af37; font-family:'Cinzel', serif; font-size:25px; letter-spacing:1px; text-transform:capitalize; }
 .calendar-header button{ width:42px; height:42px; display:flex; justify-content:center; align-items:center; border:1px solid rgba(212,175,55,0.25); border-radius:50%; background:rgba(212,175,55,0.06); color:#d4af37; font-size:18px; cursor:pointer; transition:0.2s; }
@@ -206,13 +314,42 @@ header{
     .date{ font-size:14px; }
 }
 
+.products-section{ padding:100px 10%; background:#15110c; }
+.products-header{ max-width:1200px; margin:0 auto 50px; text-align:center; }
+.products-title{ font-family:'Cinzel',serif; font-size:45px; color:#d4af37; margin-bottom:12px; }
+.products-subtitle{ color:rgba(255,255,255,0.60); font-size:16px; }
+.products-container{ max-width:1200px; margin:auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:28px; }
+.product-card{ background:#1f1810; border:1px solid rgba(255,255,255,0.08); border-radius:20px; overflow:hidden; transition:0.3s; }
+.product-card:hover{ transform:translateY(-6px); border-color:rgba(212,175,55,0.30); }
+.product-image-container{ width:100%; height:240px; background:#1c1610; overflow:hidden; }
+.product-image{ width:100%; height:100%; object-fit:cover; transition:0.3s; }
+.product-card:hover .product-image{ transform:scale(1.04); }
+.product-no-image{ width:100%; height:100%; display:flex; justify-content:center; align-items:center; color:rgba(255,255,255,0.30); font-size:14px; }
+.product-content{ padding:22px; }
+.product-category{ display:block; color:rgba(255,255,255,0.40); font-size:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+.product-name{ color:white; font-size:19px; font-weight:600; margin-bottom:10px; }
+.product-description{ color:rgba(255,255,255,0.55); font-size:14px; line-height:1.5; min-height:42px; margin-bottom:20px; }
+.product-footer{ display:flex; justify-content:space-between; align-items:center; gap:15px; }
+.product-price{ color:#d4af37; font-size:21px; font-weight:700; }
+.add-cart-btn{ padding:11px 16px; border:none; border-radius:10px; background:#d4af37; color:#000; font-size:13px; font-weight:700; cursor:pointer; transition:0.2s; }
+.add-cart-btn:hover{ transform:translateY(-2px); }
+.add-cart-btn:disabled{ opacity:0.55; cursor:not-allowed; transform:none; }
+.products-loading{ grid-column:1/-1; text-align:center; color:rgba(255,255,255,0.50); padding:40px; }
+.products-empty{ grid-column:1/-1; text-align:center; padding:50px; color:rgba(255,255,255,0.50); background:#1f1810; border-radius:18px; }
+
+@media(max-width:700px){
+    .products-section{ padding:70px 6%; }
+    .products-title{ font-size:34px; }
+    .products-container{ grid-template-columns:1fr; }
+}
+
 .reserve-button-container{ display:flex; justify-content:center; margin-top:40px; }
 .open-modal-btn{ padding:16px 45px; border:none; border-radius:14px; background:#d4af37; color:black; font-size:18px; font-weight:600; cursor:pointer; }
 
 .booking-modal{ position:fixed; top:0; left:0; width:100%; height:100vh; background:rgba(0,0,0,0.75); display:flex; justify-content:center; align-items:center; opacity:0; visibility:hidden; transition:0.3s; z-index:99999; }
 .booking-modal.active{ opacity:1; visibility:visible; }
 
-.modal-content{ width:90%; max-width:850px; max-height:90vh; overflow-y:auto; background:#111; border:1px solid rgba(212,175,55,0.15); border-radius:25px; padding:45px; position:relative; box-shadow:0 25px 70px rgba(0,0,0,0.55); }
+.modal-content{ width:90%; max-width:850px; max-height:90vh; overflow-y:auto; background:#1c1610; border:1px solid rgba(212,175,55,0.15); border-radius:25px; padding:45px; position:relative; box-shadow:0 25px 70px rgba(0,0,0,0.55); }
 
 .close-modal{ position:absolute; top:20px; right:20px; width:45px; height:45px; border:none; border-radius:12px; background:rgba(255,255,255,0.08); color:white; font-size:20px; cursor:pointer; }
 
@@ -283,13 +420,69 @@ header{
 
 <header>
     <nav class="navbar">
-        <div class="logo">Machin Barber</div>
-        <div class="nav-links">
-            <a href="#">Galería</a>
-            <a href="#">Servicios</a>
-            <a href="{{ route('login') }}">Iniciar Sesión</a>
-            <a href="#booking" class="btn-reservar">Reservar</a>
+
+        <div class="logo">
+            Machin Barber
         </div>
+
+        <div class="nav-links">
+
+            <a href="#">
+                Galería
+            </a>
+
+            <a href="#services">
+                Servicios
+            </a>
+
+            <a href="#products">
+                Productos
+            </a>
+
+            @auth
+
+                <a href="{{ route('appointments.mine') }}">
+                    Mis citas
+                </a>
+
+                <a href="{{ route('purchases.mine') }}">
+                    Mis compras
+                </a>
+
+            @endauth
+
+            <a href="{{ route('cart.view') }}" class="cart-link">
+                Carrito
+                <span id="cartCount" class="cart-count">0</span>
+            </a>
+
+            @guest
+
+                <a href="{{ route('login') }}">
+                    Iniciar sesión
+                </a>
+
+            @endguest
+
+            @auth
+
+                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                    @csrf
+
+                    <button type="submit" class="logout-link">
+                        Cerrar sesión
+                    </button>
+
+                </form>
+
+            @endauth
+
+            <a href="#booking" class="btn-reservar">
+                Reservar
+            </a>
+
+        </div>
+
     </nav>
 </header>
 
@@ -301,7 +494,7 @@ header{
     </div>
     <div class="hero-content">
         <h1>Estilo que impone presencia</h1>
-        <p>Más que un corte, una experiencia premium.</p>
+        <p>Más que un corte, una experiencia.</p>
         <div class="hero-buttons">
             <a href="#booking" class="btn-primary">Reservar cita</a>
             <a href="#" class="btn-secondary">Ver servicios</a>
@@ -309,43 +502,67 @@ header{
     </div>
 </section>
 
-<section class="about-section">
-    <div class="about-container">
-        <div class="about-text">
-            <h2>Tradición y Estilo</h2>
-            <p>En Machin Barber combinamos técnicas clásicas con estilo moderno para ofrecer una experiencia premium.</p>
-        </div>
-        <div class="about-image">
-            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?q=80&w=1200&auto=format&fit=crop">
-        </div>
+<section class="services-section" id="services">
+    <h2 class="services-title">Nuestros Servicios</h2>
+
+    @php
+        $serviceImages = [
+            'Afeitado clásico' => 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=1200&auto=format&fit=crop',
+
+            'Barba & Estilo' => 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1200&auto=format&fit=crop',
+
+            'Corte clásico' => 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=1200&auto=format&fit=crop',
+
+            'Corte niño' => 'https://revistaflow.com/wp-content/uploads/2025/08/Inicio-de-clases-2025-Cortes-de-cabello-para-ninos-696x461.jpg',
+
+            'Fade moderno' => 'https://www.clara.es/medio/2023/07/10/cortes-de-pelo-degradados-para-hombre-mid-fade_fb12bf87_230710151957_800x996.jpg',
+            'Limpieza facial' => 'https://homme.mx/wp-content/uploads/2023/09/tratamientos-faciales-hombres-homme-luxury-barbers-01.jpg ',
+            'Perfilado de cejas' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbNgI-njoxse2rWCSHcxkG2o-G__iUwJzotUGaN-cY6w733KsWHFJA9T_H&s=10',
+
+            'Ritual Machin' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZh2jRxqEsWkLJ5bcu_HSzzdcoqSl0qQ2F86__3BOx4USHgRzxZJDnDjY&s=10',
+
+            'Spa Premium' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaJmy2aQMM5XgLWGJ3AQMHHKDIDpFdZjCfh2mM9Tjdy56ba-xZmo7MXIA&s=10',
+        ];
+    @endphp
+
+    <div class="cards-container">
+        @foreach($services as $service)
+            <div class="service-card">
+
+                <img
+                    src="{{ $serviceImages[$service->name] ?? 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1200&auto=format&fit=crop' }}"
+                    alt="{{ $service->name }}"
+                >
+
+                <div class="card-content">
+                    <h3>{{ $service->name }}</h3>
+
+                    <ul>
+                        @foreach(preg_split('/\s*,\s*/', $service->description) as $item)
+                            <li>{{ trim($item) }}</li>
+                        @endforeach
+                    </ul>
+
+                    <span class="service-price">
+                        ${{ number_format($service->price, 2) }}
+                    </span>
+                </div>
+
+            </div>
+        @endforeach
     </div>
 </section>
 
-<section class="services-section">
-    <h2 class="services-title">Nuestros Servicios</h2>
-    <div class="cards-container">
-        <div class="service-card">
-            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200&auto=format&fit=crop">
-            <div class="card-content">
-                <h3>Spa Premium</h3>
-                <ul>
-                    <li>Corte de cabello</li>
-                    <li>Limpieza facial</li>
-                    <li>Exfoliación facial</li>
-                </ul>
-            </div>
+<section class="products-section" id="products">
+    <div class="products-header">
+        <div>
+            <h2 class="products-title">Nuestros Productos</h2>
+            <p class="products-subtitle">Productos seleccionados para mantener tu estilo todos los días.</p>
         </div>
-        <div class="service-card">
-            <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1200&auto=format&fit=crop">
-            <div class="card-content">
-                <h3>Barba & Estilo</h3>
-                <ul>
-                    <li>Perfilado de barba</li>
-                    <li>Toalla caliente</li>
-                    <li>Aceites premium</li>
-                </ul>
-            </div>
-        </div>
+    </div>
+
+    <div id="productsContainer" class="products-container">
+        <p class="products-loading">Cargando productos...</p>
     </div>
 </section>
 
@@ -1460,6 +1677,303 @@ nextMonth.addEventListener("click", () => {
         }
     );
 
+    // =====================================================
+// PRODUCTOS
+// =====================================================
+
+const productsContainer = document.getElementById("productsContainer");
+const cartCount = document.getElementById("cartCount");
+
+
+// =====================================================
+// CARGAR PRODUCTOS
+// =====================================================
+
+async function loadProducts(){
+
+    try {
+
+        const response = await fetch("/api/shop/products", {
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        const result = await response.json();
+
+        if(!response.ok){
+            throw new Error(
+                result.message ||
+                "No se pudieron cargar los productos."
+            );
+        }
+
+        const products = result.data.data;
+
+        renderProducts(products);
+
+    }catch(error){
+
+        console.error(
+            "Error cargando productos:",
+            error
+        );
+
+        productsContainer.innerHTML = `
+            <div class="products-empty">
+                No se pudieron cargar los productos.
+            </div>
+        `;
+    }
+}
+
+
+// =====================================================
+// MOSTRAR PRODUCTOS
+// =====================================================
+
+function renderProducts(products) {
+
+    productsContainer.innerHTML = "";
+
+    if (!products || products.length === 0) {
+
+        productsContainer.innerHTML = `
+            <div class="products-empty">
+                No hay productos disponibles.
+            </div>
+        `;
+
+        return;
+    }
+
+    products.forEach(product => {
+
+        const card = document.createElement("div");
+
+        card.classList.add("product-card");
+
+        let imageHTML = `
+            <div class="product-no-image">
+                Sin imagen
+            </div>
+        `;
+
+        if (product.images && product.images.length > 0) {
+
+            // Intentamos cargar las imágenes en orden.
+            // Si una falla, probamos la siguiente.
+            const imageURL = product.images
+                .map(image => {
+                    let path = image.image.replace(/\\/g, "/");
+
+                    if (!path.startsWith("http")) {
+                        path = `/storage/${path}`;
+                    }
+
+                    return path;
+                })[0];
+
+            console.log(product.name, imageURL);
+
+            imageHTML = `
+                <img
+                    src="${imageURL}"
+                    alt="${product.name}"
+                    class="product-image"
+                    onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=&quot;product-no-image&quot;>Sin imagen</div>';"
+                >
+            `;
+        }
+
+        const category = product.category
+            ? product.category.name
+            : "Producto";
+
+        card.innerHTML = `
+            <div class="product-image-container">
+                ${imageHTML}
+            </div>
+
+            <div class="product-content">
+
+                <span class="product-category">
+                    ${category}
+                </span>
+
+                <h3 class="product-name">
+                    ${product.name}
+                </h3>
+
+                <p class="product-description">
+                    ${product.description || ""}
+                </p>
+
+                <div class="product-footer">
+
+                    <span class="product-price">
+                        $${Number(product.sell_price).toFixed(2)}
+                    </span>
+
+                    <button
+                        type="button"
+                        class="add-cart-btn"
+                        onclick="addToCart(${product.productID}, this)"
+                    >
+                        Agregar
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+        productsContainer.appendChild(card);
+    });
+}
+
+
+// =====================================================
+// AGREGAR AL CARRITO
+// =====================================================
+
+async function addToCart(productID, button){
+
+    const originalText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Agregando...";
+
+    try {
+
+        const response = await fetch("/api/cart", {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+
+            credentials: "same-origin",
+
+            body: JSON.stringify({
+                id: productID,
+                quantity: 1
+            })
+        });
+
+        const result = await response.json();
+
+        if(response.status === 401){
+            window.location.href = "{{ route('login') }}";
+            return;
+        }
+
+        if(!response.ok){
+
+            alert(
+                result.message ||
+                "No se pudo agregar el producto."
+            );
+
+            button.textContent = originalText;
+            button.disabled = false;
+
+            return;
+        }
+
+        button.textContent = "Agregado";
+
+        updateCartCount(result.data);
+
+        setTimeout(() => {
+
+            button.textContent = originalText;
+            button.disabled = false;
+
+        }, 1000);
+
+    }catch(error){
+
+        console.error(
+            "Error agregando producto:",
+            error
+        );
+
+        button.textContent = originalText;
+        button.disabled = false;
+
+        alert(
+            "Ocurrió un error al agregar el producto."
+        );
+    }
+}
+
+window.addToCart = addToCart;
+// =====================================================
+// ACTUALIZAR CONTADOR DEL CARRITO
+// =====================================================
+
+function updateCartCount(cart){
+
+    if(!cart || !cart.producto_cart){
+
+        cartCount.textContent = "0";
+
+        return;
+    }
+
+    const quantity = cart.producto_cart.reduce(
+        (total, item) => {
+            return total + Number(item.quantity);
+        },
+        0
+    );
+
+    cartCount.textContent = quantity;
+}
+
+
+// =====================================================
+// CARGAR CONTADOR DEL CARRITO
+// =====================================================
+
+async function loadCartCount(){
+
+    try {
+
+        const response = await fetch("/api/cart", {
+            headers: {
+                "Accept": "application/json"
+            },
+
+            credentials: "same-origin"
+        });
+
+        if(response.status === 401){
+
+            cartCount.textContent = "0";
+
+            return;
+        }
+
+        const result = await response.json();
+
+        if(!response.ok){
+            return;
+        }
+
+        updateCartCount(result.data);
+
+    }catch(error){
+
+        console.error(
+            "Error cargando contador:",
+            error
+        );
+    }
+}
+
 
     // =====================================================
     // INICIALIZACIÓN
@@ -1470,6 +1984,10 @@ nextMonth.addEventListener("click", () => {
     resetTimes();
 
     loadChairs();
+
+    loadProducts();
+
+    loadCartCount();
 
 });
 </script>

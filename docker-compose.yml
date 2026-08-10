@@ -13,3 +13,20 @@ services:
       MYSQL_DATABASE: machin_barber
     ports:
       - "3307:3306"
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8080:80"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://app:80
+    depends_on:
+      - app
+    restart: unless-stopped

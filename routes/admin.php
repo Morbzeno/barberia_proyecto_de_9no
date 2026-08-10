@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\SellController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ReportController;
+
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
 
@@ -50,4 +52,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     Route::get('pagos', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('pagos/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+
+Route::get('pedidos', [SellController::class, 'orders'])
+    ->name('orders');
+
+Route::patch('pedidos/{id}/estado', [SellController::class, 'updateOrderStatus'])
+    ->name('orders.status');
+
+    Route::get('reportes/general/pdf', [ReportController::class, 'generalPdf'])
+    ->name('reports.general.pdf');
 });
+
+

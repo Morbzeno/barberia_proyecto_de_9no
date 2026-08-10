@@ -9,26 +9,54 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Sell extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $primaryKey = 'sellId';
+
+    protected $primaryKey = 'sellID';
+
     protected $fillable = [
-        'cartID', 'clientID', 'directionID', 'total', 'iva', 'purchase_method'
-    ];
+    'cartID',
+    'clientID',
+    'directionID',
+    'total',
+    'iva',
+    'purchase_method',
+    'delivery_method',
+    'order_status',
+    'tracking_code'
+];
+
     public function cart()
     {
-        return $this->belongsTo(Cart::class, 'cartID', 'cartID');
+        return $this->belongsTo(
+            Cart::class,
+            'cartID',
+            'cartID'
+        );
     }
+
     public function client()
     {
-        return $this->belongsTo(User::class, 'clientID', 'clientid');
+        return $this->belongsTo(
+            Client::class,
+            'clientID',
+            'clientID'
+        );
     }
+
     public function direction()
     {
-        return $this->belongsTo(Direction::class, 'directionID', 'directionID');
-    }
-    public function product_cart()
-    {
-        return $this->hasMany(product_cart::class, 'productCartID', 'productCartID');
+        return $this->belongsTo(
+            Direction::class,
+            'directionID',
+            'directionID'
+        );
     }
 
-
+    public function payment()
+{
+    return $this->hasOne(
+        Payment::class,
+        'sellID',
+        'sellID'
+    );
+}
 }

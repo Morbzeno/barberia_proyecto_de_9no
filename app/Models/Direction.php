@@ -27,6 +27,6 @@ class Direction extends Model
     }
     public function sell()
     {
-        return $this->hasOne(Sell::class, 'sellID', 'sellID');
+        return $this->hasMany(Sell::class, 'directionID', 'directionID');
     }
 }

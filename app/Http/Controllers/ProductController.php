@@ -43,6 +43,22 @@ class ProductController extends Controller
         ],200);
     }
 
+    public function shop()
+{
+    $products = Product::with([
+        'images',
+        'category'
+    ])
+    ->where('state', 'ACTIVO')
+    ->where('stock', '>', 0)
+    ->paginate(12);
+
+    return response()->json([
+        'data' => $products,
+        'message' => 'Productos disponibles obtenidos exitosamente.'
+    ], 200);
+}
+
     public function main(){
         $products = Product::with(['images'])->paginate(10, ['*'], 'page_products');
         
@@ -67,54 +83,57 @@ class ProductController extends Controller
         ],200);
     }
 
-    public function store(Request $request){
-        $request->validate([
-            'categoryID' => 'required|integer|exists:categories,categoryID|',
-            'name' => 'required|string|max:255',
-            'sell_price' => 'required|numeric',
-            'description' => 'required|string',
-            'stock' => 'required|integer',
-            'buy_price' => 'required|numeric',
-            'bar_code' => 'required|numeric|unique:products,bar_code',
-            'state' => 'required|in:ACTIVO,INACTIVO',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-        try {
-            DB::beginTransaction();
+    public function store(Request $request)
+{
+    $request->validate([
+        'categoryID' => 'required|integer|exists:categories,categoryID',
+        'name' => 'required|string|max:255',
+        'sell_price' => 'required|numeric',
+        'description' => 'required|string',
+        'stock' => 'required|integer',
+        'buy_price' => 'required|numeric',
+        'bar_code' => 'required|numeric|unique:products,bar_code',
+        'state' => 'required|in:ACTIVO,INACTIVO',
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+    ]);
 
-            $product = Product::create($request->all());
-        
-            if ($request->hasFile('images')) {
-                $imagesIds = [];
-                foreach ($request->file('images') as $file) {
-                    $path = $file->store('products', 'public');
-                    $image = Image::create(['ImageURL' => $path]);
-                    $imagesIds[] = $image->imageID;
-                }
-                $product->images()->attach($imagesIds);
+    try {
+        DB::beginTransaction();
+
+        $product = Product::create($request->all());
+
+        if ($request->hasFile('images')) {
+
+            foreach ($request->file('images') as $file) {
+
+                $path = $file->store('products', 'public');
+
+                $image = Image::create([
+                    'image' => $path
+                ]);
+
+                $product->images()->attach($image->imageID);
             }
-        
-            $product->load(['images', 'category']);
-        
-            foreach ($product->images as $img) {
-                $img->ImageURL = url('storage/' . $img->ImageURL);
-            }
-            DB::commit();
-
-            return response()->json([
-                "data" => $product,
-                "message" => "Producto creado exitosamente."
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return response()->json([
-                "message" => "Error al crear el producto: " . $e->getMessage()
-            ], 500);
         }
+
+        $product->load(['images', 'category']);
+
+        DB::commit();
+
+        return response()->json([
+            'data' => $product,
+            'message' => 'Producto creado exitosamente.'
+        ], 201);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'message' => 'Error al crear el producto: ' . $e->getMessage()
+        ], 500);
     }
-    
+}
     public function update(Request $request, $id){
         $product = Product::find($id);
 
@@ -134,7 +153,7 @@ class ProductController extends Controller
             'stock' => 'integer',
             'description' => 'string',
             'state' => 'in:ACTIVO,INACTIVO',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         try {
@@ -144,8 +163,8 @@ class ProductController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($product->images as $image) {
-                    if (Storage::disk('public')->exists($image->ImageURL)) {
-                        Storage::disk('public')->delete($image->ImageURL);
+                    if (Storage::disk('public')->exists($image->image)) {
+                        Storage::disk('public')->delete($image->image);
                     }
                     $image->delete();
                 }
@@ -159,7 +178,7 @@ class ProductController extends Controller
                 $product->images()->attach($imagesIds);
             }
 
-            $product->load(['images', 'categories']);
+            $product->load(['images', 'category']);
             
             foreach ($product->images as $img) {
                 $img->ImageURL = url('storage/' . $img->ImageURL);
@@ -192,8 +211,8 @@ class ProductController extends Controller
             DB::beginTransaction();
 
             foreach ($product->images as $image) {
-                if (Storage::disk('public')->exists($image->ImageURL)) {
-                    Storage::disk('public')->delete($image->ImageURL);
+                if (Storage::disk('public')->exists($image->image)) {
+                    Storage::disk('public')->delete($image->image);
                 }
                 $image->delete();
             }

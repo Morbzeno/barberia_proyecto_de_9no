@@ -10,6 +10,7 @@ use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
@@ -1343,4 +1344,46 @@ class AppointmentController extends Controller
             ], 500);
         }
     }
+    public function myAppointments()
+{
+    // Obtener usuario autenticado
+    $user = Auth::guard('web')->user();
+    
+    if (!$user) {
+        return redirect()
+            ->route('login')
+            ->with(
+                'error',
+                'Debes iniciar sesión para ver tus citas.'
+            );
+    }
+
+    // Obtener cliente asociado
+    $client = $user->client;
+
+    if (!$client) {
+        return redirect()
+            ->route('home')
+            ->with(
+                'error',
+                'No se encontró un perfil de cliente.'
+            );
+    }
+
+// Obtener las citas del cliente
+$appointments = Appointment::with([
+    'employee.person',
+    'chair',
+    'appointmentDetails.service',
+    'payment'
+])
+    ->where('clientID', $client->clientID)
+    ->orderBy('startHour', 'desc')
+    ->get();
+
+return view(
+    'client.appointments.index',
+    compact('appointments')
+);
+}
 }

@@ -107,9 +107,11 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 
 Route::get('/cart', [CartController::class, 'index']);
 Route::post('/cart', [CartController::class, 'add']);
-Route::post('/cart/{id}', [CartController::class, 'more']);
+Route::post('/cart/{id}/more', [CartController::class, 'more']);
+Route::post('/cart/{id}/less', [CartController::class, 'less']);
+Route::delete('/cart/{id}', [CartController::class, 'quitItem']);
+Route::delete('/cart', [CartController::class, 'clear']);
 Route::get('/cart/{id}', [CartController::class, 'show']);
-Route::put('/cart/{id}', [CartController::class, 'update']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
@@ -122,3 +124,5 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+Route::get('/shop/products', [ProductController::class, 'shop'])
+    ->name('shop.products');

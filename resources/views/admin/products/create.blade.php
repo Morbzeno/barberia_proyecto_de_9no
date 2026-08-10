@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="bg-white rounded-xl border border-black/10 p-6 max-w-3xl">
-    <form method="POST" action="{{ route('admin.products.store') }}" class="space-y-5">
+    <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="space-y-5">
         @csrf
         @include('admin.products._form')
         <div class="flex gap-3">

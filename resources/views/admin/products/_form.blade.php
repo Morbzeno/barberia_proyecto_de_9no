@@ -60,4 +60,26 @@
         <textarea name="description" rows="3"
                   class="w-full border border-black/15 rounded-lg px-3 py-2 text-sm">{{ old('description', $product->description ?? '') }}</textarea>
     </div>
+    <div class="sm:col-span-2">
+    <label class="block text-sm font-medium mb-1">
+        Imágenes del producto
+    </label>
+
+    <input
+        type="file"
+        name="images[]"
+        id="productImages"
+        accept="image/jpeg,image/png,image/jpg,image/webp"
+        multiple
+        class="w-full border border-black/15 rounded-lg px-3 py-2 text-sm
+               file:mr-4 file:rounded-md file:border-0
+               file:bg-[#22190f] file:px-4 file:py-2
+               file:text-sm file:text-white
+               hover:file:bg-[#3a2c1a]"
+    >
+
+    <p class="text-xs text-[#6b5c46] mt-2">
+        Puedes seleccionar una o varias imágenes. Formatos: JPG, PNG o WEBP.
+    </p>
+</div>
 </div>

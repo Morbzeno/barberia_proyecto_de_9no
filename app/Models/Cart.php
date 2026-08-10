@@ -11,7 +11,7 @@ class Cart extends Model
     use HasFactory, SoftDeletes;
     protected $primaryKey = 'cartID';
     protected $fillable = [
-        'clientID', 'total'
+        'clientID', 'total', 'status',
     ];
     public function client()
     {
