@@ -17,9 +17,12 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $Clients = Client::with(['user', 'person'])->paginate(10);
+        $clients = Client::with([
+            'user',
+            'person'
+        ])->paginate(10);
 
-        if ($Clients->isEmpty()) {
+        if ($clients->isEmpty()) {
             return response()->json([
                 'message' => 'No se encontraron Clients',
             ], 400);
@@ -27,7 +30,7 @@ class ClientController extends Controller
 
         return response()->json([
             'message' => 'Todos los Clients aquí',
-            'data' => $Clients
+            'data' => $clients
         ], 200);
     }
 
@@ -36,9 +39,12 @@ class ClientController extends Controller
      */
     public function show($id)
     {
-        $Client = Client::with(['user', 'person'])->find($id);
+        $client = Client::with([
+            'user',
+            'person'
+        ])->find($id);
 
-        if (!$Client) {
+        if (!$client) {
             return response()->json([
                 'message' => 'Client no encontrado',
             ], 404);
@@ -46,7 +52,7 @@ class ClientController extends Controller
 
         return response()->json([
             'message' => 'Datos del Client',
-            'data' => $Client
+            'data' => $client
         ], 200);
     }
 
@@ -57,44 +63,65 @@ class ClientController extends Controller
     {
         $request->validate([
             // User
-            'email' => 'required|string|email|unique:users,email|max:255',
-            'password' => 'required|string|min:8|confirmed|max:255',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'unique:users,email',
+                'max:255'
+            ],
+
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'max:255'
+            ],
 
             // Person
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:10',
+            'name' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'last_name' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'phone_number' => [
+                'required',
+                'string',
+                'max:10'
+            ],
         ]);
 
         try {
 
             DB::transaction(function () use ($request) {
 
-                // Crear usuario
                 $user = User::create([
                     'email' => $request->email,
-                    'password' => Hash::make($request->password),
+                    'password' => Hash::make(
+                        $request->password
+                    ),
                 ]);
 
-                // Crear información personal
                 $person = Person::create([
                     'name' => $request->name,
                     'last_name' => $request->last_name,
                     'phone_number' => $request->phone_number,
                 ]);
 
-                // Crear cliente y relacionarlo con User y Person
                 Client::create([
                     'userID' => $user->userID,
                     'personID' => $person->personID,
                 ]);
             });
 
-            /*
-             * IMPORTANTE:
-             * Después de completar correctamente la transacción,
-             * mandamos al usuario al login.
-             */
             return redirect()
                 ->route('login')
                 ->with(
@@ -107,19 +134,27 @@ class ClientController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'error' => 'Error al crear la cuenta: ' . $e->getMessage()
+                    'error' =>
+                        'Error al crear la cuenta: ' .
+                        $e->getMessage()
                 ]);
         }
     }
 
     /**
      * Actualizar un cliente.
+     *
+     * IMPORTANTE:
+     * Este método se conserva para web/admin.
      */
     public function update(Request $request, $id)
     {
-        $Client = Client::with(['user', 'person'])->find($id);
+        $client = Client::with([
+            'user',
+            'person'
+        ])->find($id);
 
-        if (!$Client) {
+        if (!$client) {
             return response()->json([
                 'message' => 'Client no encontrado'
             ], 404);
@@ -133,60 +168,239 @@ class ClientController extends Controller
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')
-                    ->ignore($Client->userID, 'userID'),
+                    ->ignore(
+                        $client->userID,
+                        'userID'
+                    ),
             ],
 
-            'password' => 'sometimes|string|min:8|confirmed|max:255',
+            'password' => [
+                'sometimes',
+                'string',
+                'min:8',
+                'confirmed',
+                'max:255'
+            ],
 
             // Person
-            'name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255'
+            ],
+
+            'last_name' => [
+                'sometimes',
+                'string',
+                'max:255'
+            ],
 
             'rfc' => [
                 'sometimes',
                 'string',
                 'max:13',
                 Rule::unique('persons', 'rfc')
-                    ->ignore($Client->personID, 'personID'),
+                    ->ignore(
+                        $client->personID,
+                        'personID'
+                    ),
             ],
 
-            'phone_number' => 'sometimes|string|max:10',
+            'phone_number' => [
+                'sometimes',
+                'string',
+                'max:10'
+            ],
         ]);
 
         try {
 
-            return DB::transaction(function () use ($request, $Client) {
+            return DB::transaction(
+                function () use ($request, $client) {
 
-                // Datos del usuario
-                $userData = $request->only(['email']);
+                    // Datos del usuario
+                    $userData = $request->only([
+                        'email'
+                    ]);
 
-                if ($request->filled('password')) {
-                    $userData['password'] = Hash::make($request->password);
-                }
+                    if ($request->filled('password')) {
+                        $userData['password'] =
+                            Hash::make(
+                                $request->password
+                            );
+                    }
 
-                $Client->user->update($userData);
+                    if (!empty($userData)) {
+                        $client->user->update(
+                            $userData
+                        );
+                    }
 
-                // Datos personales
-                $Client->person->update(
-                    $request->only([
+                    // Datos personales
+                    $personData = $request->only([
                         'name',
                         'last_name',
                         'rfc',
                         'phone_number'
-                    ])
-                );
+                    ]);
 
-                return response()->json([
-                    'message' => 'Client actualizado correctamente',
-                    'data' => $Client->fresh(['user', 'person'])
-                ], 200);
-            });
+                    if (!empty($personData)) {
+                        $client->person->update(
+                            $personData
+                        );
+                    }
+
+                    return response()->json([
+                        'message' =>
+                            'Client actualizado correctamente',
+
+                        'data' =>
+                            $client->fresh([
+                                'user',
+                                'person'
+                            ])
+                    ], 200);
+                }
+            );
 
         } catch (\Exception $e) {
 
             return response()->json([
-                'message' => 'Error al actualizar el Client',
-                'error' => $e->getMessage()
+                'message' =>
+                    'Error al actualizar el Client',
+
+                'error' =>
+                    $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar el perfil DEL CLIENTE AUTENTICADO.
+     *
+     * Este método es para Android.
+     * No recibe clientID.
+     * Usa el token para determinar qué cliente está conectado.
+     */
+    public function updateMyProfile(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Usuario no autenticado'
+            ], 401);
+        }
+
+        $client = Client::with([
+            'user',
+            'person'
+        ])
+            ->where(
+                'userID',
+                $user->userID
+            )
+            ->first();
+
+        if (!$client) {
+            return response()->json([
+                'message' => 'Cliente no encontrado'
+            ], 404);
+        }
+
+        $request->validate([
+            'email' => [
+                'sometimes',
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')
+                    ->ignore(
+                        $client->userID,
+                        'userID'
+                    ),
+            ],
+
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'last_name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'phone_number' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:10'
+            ],
+        ]);
+
+        try {
+
+            return DB::transaction(
+                function () use ($request, $client) {
+
+                    /*
+                     * Correo
+                     */
+                    if ($request->has('email')) {
+
+                        $client->user->update([
+                            'email' =>
+                                $request->email
+                        ]);
+                    }
+
+                    /*
+                     * Información personal
+                     */
+                    $personData =
+                        $request->only([
+                            'name',
+                            'last_name',
+                            'phone_number'
+                        ]);
+
+                    if (!empty($personData)) {
+
+                        $client->person->update(
+                            $personData
+                        );
+                    }
+
+                    $updatedClient =
+                        $client->fresh([
+                            'user',
+                            'person'
+                        ]);
+
+                    return response()->json([
+                        'message' =>
+                            'Perfil actualizado correctamente',
+
+                        'data' =>
+                            $updatedClient
+                    ], 200);
+                }
+            );
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' =>
+                    'Error al actualizar el perfil',
+
+                'error' =>
+                    $e->getMessage()
             ], 500);
         }
     }
@@ -196,47 +410,109 @@ class ClientController extends Controller
      */
     public function destroy($id)
     {
-        $Client = Client::find($id);
+        $client = Client::find($id);
 
-        if (!$Client) {
+        if (!$client) {
             return response()->json([
-                'message' => 'Client no encontrado'
+                'message' =>
+                    'Client no encontrado'
             ], 404);
         }
 
         try {
 
-            $Client->delete();
+            $client->delete();
 
             return response()->json([
-                'message' => 'Client eliminado correctamente'
+                'message' =>
+                    'Client eliminado correctamente'
             ], 200);
 
         } catch (\Exception $e) {
 
             return response()->json([
-                'message' => 'Error al eliminar el Client',
-                'error' => $e->getMessage()
+                'message' =>
+                    'Error al eliminar el Client',
+
+                'error' =>
+                    $e->getMessage()
             ], 500);
         }
     }
 
+    /**
+     * Obtener el perfil del cliente autenticado.
+     *
+     * Se utiliza desde Android para Editar Perfil.
+     */
     public function profile(Request $request)
     {
         $user = $request->user();
-        $client = Client::where('userID', $user->userID)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' =>
+                    'Usuario no autenticado'
+            ], 401);
+        }
+
+        $client = Client::with([
+            'user',
+            'person'
+        ])
+            ->where(
+                'userID',
+                $user->userID
+            )
+            ->first();
 
         if (!$client) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
+            return response()->json([
+                'message' =>
+                    'Cliente no encontrado'
+            ], 404);
         }
 
         return response()->json([
             'status' => 'success',
+
             'data' => [
-                'clientId' => $client->clientID,
-                'name' => $user->name,
-                'email' => $user->email
+
+                /*
+                 * Los dejamos también por compatibilidad
+                 * con código anterior.
+                 */
+                'clientId' =>
+                    $client->clientID,
+
+                'name' =>
+    $client->person
+        ? $client->person->name
+        : null,
+
+'email' =>
+    $client->user
+        ? $client->user->email
+        : null,
+
+                /*
+                 * Estructura completa para Android.
+                 */
+                'clientID' =>
+                    $client->clientID,
+
+                'userID' =>
+                    $client->userID,
+
+                'personID' =>
+                    $client->personID,
+
+                'user' =>
+                    $client->user,
+
+                'person' =>
+                    $client->person,
             ]
-        ]);
+        ], 200);
     }
 }

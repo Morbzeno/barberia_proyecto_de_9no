@@ -149,6 +149,15 @@ Route::middleware('auth:sanctum')->group(function () {
     [AppointmentController::class, 'barberAppointments']
 );
 
+Route::get(
+    '/client-appointments',
+    [AppointmentController::class, 'showClient']
+);
+
+Route::put(
+    '/profile',
+    [ClientController::class, 'updateMyProfile']
+);
     // -----------------------------------------------------
     // LOGOUT
     // -----------------------------------------------------
