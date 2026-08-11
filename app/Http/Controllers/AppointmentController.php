@@ -161,7 +161,7 @@ public function showDailyAppointmentsByEmployee($date, $employeeID)
                 if ($finish->gte($workStart) && $finish->copy()->addMinutes($totalDuration)->lte($workEnd)) $candidateTimes[] = $finish;
             }
 
-            $candidateTimes = collect($candidateTimes)->unique(fn($t) => $time->format('Y-m-d H:i:s'))->sortBy(fn($t) => $t->timestamp)->values();
+            $candidateTimes = collect($candidateTimes)->unique(fn($t) => $t->format('Y-m-d H:i:s'))->sortBy(fn($t) => $t->timestamp)->values();
 
             foreach ($candidateTimes as $slotStart) {
                 $slotEnd = $slotStart->copy()->addMinutes($totalDuration);
